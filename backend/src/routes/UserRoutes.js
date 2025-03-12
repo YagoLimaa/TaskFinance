@@ -1,10 +1,10 @@
 import express from 'express';
+import { loginUsario, registroUser } from '../controllers/auth/userController.js';
 
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-    res.send("Teste lado servidor");
-});
+router.post("/registro", registroUser);
+router.post("/login", loginUsario);    
 
 export default router;
