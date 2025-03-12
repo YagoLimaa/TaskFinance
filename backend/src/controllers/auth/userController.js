@@ -8,7 +8,7 @@ export const registroUser = asyncHandler(async (req, res) => {
 
     if (!name || !email || !password){
         // erro 400 é erro de requisição inválida
-        res.status(400).json({message: "Preencha todos os campos"});
+        return res.status(400).json({message: "Preencha todos os campos"});
     }
 
     // verificar o tamanho da senha
@@ -65,7 +65,7 @@ export const registroUser = asyncHandler(async (req, res) => {
         token,
     });
 }else{
-    res.status(400).json({message: "Usuário não encontrado"});
+    return res.status(400).json({message: "Usuário não encontrado"});
 }
 });
 
@@ -81,7 +81,7 @@ export const loginUsario = asyncHandler(async (req, res) => {
 
     if (!email || !password){
         // erro 400 é erro de requisição inválida
-        res.status(400).json({message: "Preencha todos os campos"});
+        return res.status(400).json({message: "Preencha todos os campos"});
     }
 
     // checar se o usuário existe no banco de dados
@@ -91,12 +91,15 @@ export const loginUsario = asyncHandler(async (req, res) => {
         // erro 400 é erro de requisição inválida
         return res.status(400).json({message: "usuário não encontrado, registre-se!"});
     }
+
+    
     // verificar se a senha está correta comparando o hash da db
     const isMatch = await bcrypt.compare(password, userExist.password);
 
+    
     if (!isMatch){
         // erro 400 é erro de requisição inválida
-        res.status(400).json({message: "email ou senha incorretos"});
+        return res.status(400).json({message: "email ou senha incorretos"});
 }
     // gerar o token de autenticação com o id do usuário
     const token = gerarToken(userExist._id);
@@ -125,6 +128,15 @@ export const loginUsario = asyncHandler(async (req, res) => {
             token,
         });
     }else{
-        res.status(400).json({message: "email ou senha incorretos"});
+        return res.status(400).json({message: "email ou senha incorretos"});
     }
+});
+
+
+// logout do usuário
+
+
+export const logoutUsuario = asyncHandler(async (req, res) => {
+    res.clearCookie("token");
+    res.status(200).json({message: "Usuário deslogado"}); 
 });

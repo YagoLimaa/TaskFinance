@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const UserSchema = new mongoose.Schema({
     name:{
@@ -38,6 +39,24 @@ const UserSchema = new mongoose.Schema({
     },  
     {timestamps: true, minimize: true}
 );
+
+// hash a senha antes de salvar no banco de dados
+
+UserSchema.pre("save", async function(next){
+    // checar se a senha foi modificada
+    if (!this.isModified("password")){
+        return next();
+    }
+    // hash a senha usando bcrypt
+    // gerar um salt
+    const salt = await bcrypt.genSalt(10);
+    // gerar a senha hash
+    const senhaHash = this.password = await bcrypt.hash(this.password, salt);
+
+    // substituir a senha pela senha hash
+    this.password = senhaHash;
+    next();
+});
 
 const User = mongoose.model("User", UserSchema);
 
