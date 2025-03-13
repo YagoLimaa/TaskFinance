@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import User from '../../models/auth/UserModel.js';
 import gerarToken from '../../helpers/gerarToken.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export const registroUser = asyncHandler(async (req, res) => {
     const {name, email, password} = req.body;
@@ -184,5 +185,29 @@ export const updateUsuario = asyncHandler(async (req, res) => {
     }else{
         // erro 404 é erro de não encontrado
         res.status(404).json({message: "Usuário não encontrado"});
+    }
+});
+
+
+
+// status de login
+
+export const UsarioStatusLogin = asyncHandler(async (req, res) => {
+
+    const token = req.cookies.token;
+
+    if (!token){
+        // erro 401 é erro de não autorizado
+        return res.status(401).json({message: "Usuário não logado, faça login para continuar!"});
+    }
+    // fazendo a verificação do token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded){
+        // se o token for válido retornar o status 200
+        return res.status(200).json(true);
+    }else {
+        // erro 401 é erro de não autorizado
+        return res.status(401).json(false);
     }
 });
