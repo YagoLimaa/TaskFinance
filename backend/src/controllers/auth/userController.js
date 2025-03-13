@@ -140,3 +140,49 @@ export const logoutUsuario = asyncHandler(async (req, res) => {
     res.clearCookie("token");
     res.status(200).json({message: "Usuário deslogado"}); 
 });
+
+
+// pegar o perfil do usuário
+
+export const getPefilUsuario = asyncHandler(async (req, res) => {
+    // pegar o detalhes do usuário usando token
+    const user = await User.findById(req.user._id).select("-password");
+    if (user){
+        res.status(200).json(user);
+    }else{
+        // erro 404 é erro de não encontrado
+        return res.status(404).json({message: "Usuário não encontrado"});
+    }
+});
+
+
+// atualizar o perfil do usuário
+export const updateUsuario = asyncHandler(async (req, res) => {
+    // pegar o usuario pelo token > protegido pelo middleware
+    const user = await User.findById(req.user._id);
+
+    if (user){
+        // atualizar os dados do usuário
+        const {name,bio, photo} = req.body;
+
+        // salvar os dados atualizados
+        user.name = req.body.name || user.name;
+        user.bio = req.body.bio || user.bio;
+        user.photo = req.body.photo || user.photo;
+
+        const atualizado = await user.save();
+
+        res.status(200).json({
+            _id: atualizado._id,
+            name: atualizado.name,
+            email: atualizado.email,
+            role: atualizado.role,
+            photo: atualizado.photo,
+            bio: atualizado.bio,
+            isverified: atualizado.isverified,
+        });
+    }else{
+        // erro 404 é erro de não encontrado
+        res.status(404).json({message: "Usuário não encontrado"});
+    }
+});
