@@ -1,7 +1,7 @@
 import express from 'express';
 import { loginUsario,logoutUsuario,registroUser,getPefilUsuario,updateUsuario, } from '../controllers/auth/userController.js';
-import { adminMiddleware, protect } from '../middleware/authMiddleware.js';
-import { deleteUsuario } from '../controllers/auth/ControleAdmin.js';
+import { adminMiddleware, admSupremo, protect } from '../middleware/authMiddleware.js';
+import { deleteUsuario, getUsuarios } from '../controllers/auth/ControleAdmin.js';
 
 
 
@@ -18,5 +18,9 @@ router.patch("/usuario", protect, updateUsuario);
 
 router.delete("/admin/usuario/:id", protect,adminMiddleware, deleteUsuario);
 
+
+// pegar todos os usuários
+
+router.get("/admin/usuarios", protect, admSupremo, getUsuarios);
 
 export default router;

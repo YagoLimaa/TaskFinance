@@ -44,3 +44,28 @@ export const adminMiddleware = asyncHandler(async (req, res, next) => {
     // erro 403 é erro de proibido se nao for adm
     return res.status(403).json({message: "Não autorizado."});
 });
+
+export const admSupremo = asyncHandler(async (req, res, next) => {
+    if ((req.user && req.user.role === "adminSupremo") || (req.user && req.user.role === "admin")){
+        // passar para o próximo middleware se o usuário for admin
+        next();
+        return
+    }
+
+    // erro 403 é erro de proibido se nao for adm
+    return res.status(403).json({message: "Não autorizado."});
+
+});
+
+// verificar se o usuario ta verificado
+
+export const verificado = asyncHandler(async (req, res, next) => {
+    if (req.user && req.user.isVerified === true){
+        // passar para o próximo middleware se o usuário for admin
+        next();
+        return
+    }
+
+    // erro 403 é erro de proibido se nao for adm
+    return res.status(403).json({message: "Verifique seu email para continuar!"});
+});
