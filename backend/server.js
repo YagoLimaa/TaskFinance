@@ -5,6 +5,8 @@ import connect from "./src/db/connect.js";
 import cookieParser from "cookie-parser";
 
 import fs from "node:fs";
+import { error } from "node:console";
+import errosMidleware from "./src/helpers/Erros.js";
 
 dotenv.config();
 
@@ -22,7 +24,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
-
+// erros no middleware
+app.use(errosMidleware);
 //rotas
 const routeFiles = fs.readdirSync("./src/routes");
 
