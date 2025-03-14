@@ -442,6 +442,42 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
     await user.save();
 
     return res.status(200).json({ message: "Senha redefinida com sucesso!" });
+});
+
+// trocar de senha >> O usuario esta logado e quer mudar a senha
+export const MudarSenha = asyncHandler (async (req, res) => {
+    const {currentPassword, newPassword} = req.body;
+    
+    if(!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Todos os campos devem ser preenchidos!" });
+    }
+    if(currentPassword === newPassword) {
+        return res.status(400).json({ message: "A nova senha deve ser diferente da senha atual!" });
+    }
+    if (newPassword.length < 8) { // Define o mínimo de caracteres
+        return res.status(400).json({ message: "A senha deve ter pelo menos 8 caracteres!" });
+    }
+
+    // encontrar o usuario pelo Id
+    const user = await User.findById(req.user._id);
+
+    // comparar para ver se a senha atual é a mesma que a senha no banco de dados
+    const passwordIsCorrect = await bcrypt.compare(currentPassword, user.password);
+
+    if(!passwordIsCorrect) {
+        return res.status(400).json({ message: "Senha atual incorreta!" });
+    }
+
+    // se a senha for a mesma trocar pela senha digitada
+    if(passwordIsCorrect){
+        user.password = newPassword;
+        await user.save();
+        return res.status(200).json({ message: "Senha alterada com sucesso!" });
+    }else{
+        return res.status(400).json({ message: "Algo deu errado, por favor tente novamente!" });
+    }
+
+
 
     
 });
