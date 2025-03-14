@@ -368,7 +368,7 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
     // hash token antes de salvar no banco de dados
 
     const hashedToken = hashToken(passwordResetToken);
-
+    
     await new Token({
         userId: user._id,
         passwordResetToken: hashedToken,
@@ -376,9 +376,11 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
         expireAt: Date.now() + 60 * 60 * 1000, // 1 hora
     }).save();
 
+
+
     // link de reset para o usuario via email
 
-    const resetlink = `${process.env.Client_URL}/redefinir-senha/${passwordResetToken}`;
+    const resetlink = `${process.env.Client_URL}/senha-redefinir/${passwordResetToken}`;
 
     const emailData = "Redefinição de Senha - TaskFinance";
     const send_to = user.email;
@@ -388,8 +390,9 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
     const name = user.name;
     const link = resetlink;
 
+    
 
-    console.log(user.email);
+
     
     try {
         await sendEmail(emailData, send_to, reply_to, template, send_from, name, link);
@@ -400,6 +403,45 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
         return res.status(500).json({ message: "Erro ao enviar o email de redefinição de senha" });
         
     }
+});
 
 
+
+// redefinir senha >> token
+
+
+    export const TokenRedefinirSenha = asyncHandler (async (req, res) => {
+    const { senhatoken } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+        return res.status(400).json({ message: "Por favor, insira uma nova senha! " });
+    }
+
+
+    //hash token, então comparar com o token no banco de dados
+
+    const hashedToken = hashToken(senhatoken);
+
+    // encontrar token no banco de dados se exuste e nao esta expirado
+
+    const userToken = await Token.findOne({ 
+        passwordResetToken: hashedToken, 
+        expireAt: { $gt: Date.now() 
+        }
+    });
+
+    if(!userToken) {
+        return res.status(404).json({ message: "Token inválido ou expirado!" });
+    }
+
+    const user = await User.findOne(userToken.userId);
+
+    // fazer atuazliazacao da senha
+    user.password = password;
+    await user.save();
+
+    return res.status(200).json({ message: "Senha redefinida com sucesso!" });
+
+    
 });
