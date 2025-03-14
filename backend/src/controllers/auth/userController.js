@@ -285,7 +285,7 @@ export const EmailVerificar = asyncHandler(async (req, res) => {
 
     const emailData = "Verificação de Email - TaskFinance";
     const sent_to = user.email;
-    const reply_to = "noreply@gmail.com";
+    const reply_to = "noreply@taskfinance.com";
     const template = "VerificacaoEmail";
     const send_from = process.env.USER_EMAIL;
     const name = user.name;
@@ -335,5 +335,71 @@ export const UsuarioVerificar = asyncHandler(async (req, res) => {
         await user.save();
         return res.status(200).json({ message: "Email verificado com sucesso!" });
     }
+});
+
+// esqueci minha senha
+
+export const RedefinirSenha = asyncHandler (async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: "Por favor, insira um email! " });
+    }
+
+    // fvalidar se o usuario existe
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado!" });
+    }
+
+    // verificar se um token existe
+
+    let token = await Token.findOne({ userId: user._id});
+
+    if (token) {
+        await token.deleteOne();
+    }
+
+    // criar um token de verificação que expira em 1h
+    const passwordResetToken = crypto.randomBytes(64).toString("hex") + user._id;
+
+    // hash token antes de salvar no banco de dados
+
+    const hashedToken = hashToken(passwordResetToken);
+
+    await new Token({
+        userId: user._id,
+        passwordResetToken: hashedToken,
+        createdAt: Date.now(),
+        expireAt: Date.now() + 60 * 60 * 1000, // 1 hora
+    }).save();
+
+    // link de reset para o usuario via email
+
+    const resetlink = `${process.env.Client_URL}/redefinir-senha/${passwordResetToken}`;
+
+    const emailData = "Redefinição de Senha - TaskFinance";
+    const send_to = user.email;
+    const reply_to = "noreply@taskfinance.com";
+    const template = "PasswordReset";
+    const send_from = process.env.USER_EMAIL;
+    const name = user.name;
+    const link = resetlink;
+
+
+    console.log(user.email);
     
+    try {
+        await sendEmail(emailData, send_to, reply_to, template, send_from, name, link);
+        res.status(200).json({ message: "Email de redefinição de senha enviado com sucesso!" });
+    } catch (error) {
+        console.log("Erro ao enviar o email de redefinição de senha", error);
+
+        return res.status(500).json({ message: "Erro ao enviar o email de redefinição de senha" });
+        
+    }
+
+
 });
