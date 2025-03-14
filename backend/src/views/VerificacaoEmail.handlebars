@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFinance - Verificação de Email</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.5;
+      color: #333;
+      background-color: #f9fafb;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    /* Container Principal */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+    }
+    
+    /* Cabeçalho */
+    .header {
+      text-align: center;
+      padding: 20px 0;
+    }
+    
+    .logo {
+      display: inline-block;
+      text-align: center;
+    }
+    
+    .logo-container {
+      display: inline-block;
+      text-align: center;
+    }
+    
+    .logo-row {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background-color: #0062ff;
+      border-radius: 8px;
+      display: inline-block;
+      vertical-align: middle;
+      text-align: center;
+      line-height: 40px;
+      color: white;
+      font-weight: 600;
+      font-size: 18px;
+    }
+    
+    .logo-text {
+      font-size: 20px;
+      font-weight: 600;
+      color: #111827;
+      letter-spacing: -0.025em;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 8px;
+      line-height: 40px;
+    }
+    
+    /* Conteúdo */
+    .content {
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+    
+    .title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    
+    .verification-icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+      display: block;
+      margin-bottom: 24px;
+    }
+    
+    .message {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .email {
+      font-weight: 500;
+      color: #111827;
+    }
+    
+    /* Botão */
+    .button-container {
+      text-align: center;
+      margin: 24px 0;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: #0062ff;
+      color: white !important;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 16px;
+      -webkit-text-size-adjust: none;
+      mso-hide: all;
+    }
+    
+    /* Fallback for Outlook */
+    .button-fallback {
+      border-top: 14px solid #0062ff;
+      border-bottom: 14px solid #0062ff;
+      border-left: 24px solid #0062ff;
+      border-right: 24px solid #0062ff;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-weight: 500;
+      display: inline-block;
+      border-radius: 6px;
+      background-color: #0062ff;
+    }
+    
+    .button:hover {
+      background-color: #0051d4;
+    }
+    
+    /* Informações Adicionais */
+    .info {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 24px;
+    }
+    
+    .link {
+      word-break: break-all;
+      color: #0062ff;
+    }
+    
+    /* Rodapé */
+    .footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      padding: 20px 0;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 24px;
+    }
+    
+    /* Responsividade */
+    @media (max-width: 600px) {
+      .container {
+        width: 100%;
+        padding: 10px;
+      }
+      
+      .content {
+        padding: 15px;
+      }
+      
+      .title {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-container">
+        <table cellpadding="0" cellspacing="0" border="0" align="center">
+          <tr>
+            <td>
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="logo-icon" align="center" valign="middle">TF</td>
+                  <td width="8"></td>
+                  <td class="logo-text" align="center" valign="middle">TaskFinance</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    
+    <div class="content">
+      <h1 class="title">Verificação de Email</h1>
+      <p class="subtitle">Estamos confirmando seu endereço de email.</p>
+      
+      <div class="message">
+        <p>Olá, <b>{{name}}</b> </p>
+        <p>Obrigado por se cadastrar no TaskFinance. Para completar seu registro, por favor clique no botão abaixo para verificar seu email:</p>
+        <p class="email">{{email}}</p>
+      </div>
+      
+      <div class="button-container">
+        <!--[if mso]>
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{link}}>{{link}}" style="height:45px;v-text-anchor:middle;width:200px;" arcsize="10%" stroke="f" fillcolor="#0062ff">
+          <w:anchorlock/>
+          <center>
+            <span style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:bold;">Verificar Email</span>
+          </center>
+        </v:roundrect>
+        <![endif]-->
+        <a href={{link}} class="button" style="color: white; text-decoration: none;">Verificar Email</a>
+      </div>
+      
+      <div class="info">
+        <p>Se o botão acima não funcionar, você pode copiar e colar o link abaixo no seu navegador:</p>
+        <a href= {{link}}>{{link}} </a>
+        <p>Este link expirará em 24 horas.</p>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; {{currentYear}} TaskFinance. Todos os direitos reservados.</p>
+      <p>Se você não solicitou este email, por favor ignore-o.</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -140,6 +140,7 @@ export const loginUsario = asyncHandler(async (req, res) => {
             isverified,
             token,
         });
+        console.log(token);
         
     }else{
         return res.status(400).json({message: "email ou senha incorretos"});
@@ -237,6 +238,7 @@ export const UsarioStatusLogin = asyncHandler(async (req, res) => {
 export const EmailVerificar = asyncHandler(async (req, res) => {
 
     const user = await User.findById(req.user._id);
+    console.log("Usuário encontrado:", user);
 
     // verificar se o usuario existe
 
@@ -251,6 +253,7 @@ export const EmailVerificar = asyncHandler(async (req, res) => {
 
     let token = await Token.findOne({userId: user._id});
 
+    console.log("Token encontrado:", token);
 
 
     // se o token existir > deletar o token
@@ -259,23 +262,35 @@ export const EmailVerificar = asyncHandler(async (req, res) => {
         await token.deleteOne();
     }
 
+    console.log("Token deletado com sucesso",token);
+    
 
     // ciar uma verificação de token usando o user id ( fzer com que expire com um tempo)
 
     const verificationToken = crypto.randomBytes(64).toString("hex") + user._id;
+
+    console.log("Token de verificação gerado:", verificationToken);
     
+
     // verificar o token hash
 
     const hashedToken = hashToken(verificationToken);
+
+    console.log("Token de verificação gerado:", verificationToken);
+    console.log("Token de verificação hashed:", hashedToken);
+
+
 
     const newToken = new Token({
         userId: user._id,
         verificationToken: hashedToken,
         createdAt: Date.now(),
-        expireAt: Date.now() + 24 * 60 * 60 * 1000, // 24 horas
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 horas
     });
 
     await newToken.save();
+
+    console.log("Token salvo no banco de dados:", newToken);
 
     // verificar o link
 
@@ -301,6 +316,7 @@ export const EmailVerificar = asyncHandler(async (req, res) => {
 
 });
 
+
 // verificar o usuario >> email
 
 export const UsuarioVerificar = asyncHandler(async (req, res) => {
@@ -313,13 +329,18 @@ export const UsuarioVerificar = asyncHandler(async (req, res) => {
     // verificar o token hash
     const hashedToken = hashToken(verificationToken);
 
+    console.log("Token de verificação recebido:", verificationToken);
+    console.log("Token de verificação hashed recebido:", hashedToken);
+
     // Achar o usuario com o token de verificacao
 
     const UsuarioToken = await Token.findOne({
         verificationToken: hashedToken,
         // checar se nao ta expirado o token
-        expireAt: {$gt: Date.now()},
+        expiresAt: {$gt: Date.now()},
     });
+    console.log("Token encontrado no banco de dados:", UsuarioToken);
+    
     if (!UsuarioToken) {
         console.log("Token inválido ou expirado");
         return res.status(400).json({ message: "Token inválido ou expirado" });
@@ -327,13 +348,16 @@ export const UsuarioVerificar = asyncHandler(async (req, res) => {
 
     // Verificar o usuário
     const user = await User.findById(UsuarioToken.userId);
-
-    if(user.isverified){
-        return res.status(400).json({message: "Email já verificado!"});
-    }else{
-        user.isverified = true;
-        await user.save();
-        return res.status(200).json({ message: "Email verificado com sucesso!" });
-    }
+    console.log("Usuário encontrado: ", user);
     
+    if (!user) {
+        console.log("Usuário não encontrado");
+        return res.status(404).json({ message: "Usuário não encontrado" });
+    }
+
+    user.isverified = true;
+    await user.save();
+
+    console.log("Email verificado com sucesso para o usuário:", user.email);
+    return res.status(200).json({ message: "Email verificado com sucesso" });
 });
