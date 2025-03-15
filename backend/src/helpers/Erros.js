@@ -5,22 +5,26 @@ const errosMidleware = (err, req, res, next) => {
         return next(err);
     }
 
+    // Definir status de erro
+    let codigoDeStatus = res.statusCode && res.statusCode >= 400 ? res.statusCode : 500;
+    let mensagem = err.message || "Ocorreu um erro no servidor.";
 
-    // status de codigo
+    // Se for um erro de validação do Mongoose
+    if (err.name === "ValidationError") {
+        codigoDeStatus = 400;
+        mensagem = Object.values(err.errors).map((e) => e.message); // Pega as mensagens dos erros
+    }
 
-    const codigoDeStatus = res.statusCode && res.statusCode >= 400 ? res.statusCode : 500;
-
-    res.status(codigoDeStatus);
-
-
-    // logs de erro no console se nao for de producao para poder fazer debugging
-    if(process.env.NODE_ENV !== "production"){
+    // Log do erro no console para debugging (exceto em produção)
+    if (process.env.NODE_ENV !== "production") {
         console.log(err);
     }
 
-    res.json({
-        message: err.message,
-        stack: process.env.NODE_ENV === "production" ? null : err.stack,
+    // Enviar resposta formatada como JSON
+    res.status(codigoDeStatus).json({
+        sucesso: false,
+        mensagem,
+        stack: process.env.NODE_ENV === "production" ? null : err.stack
     });
 };
 

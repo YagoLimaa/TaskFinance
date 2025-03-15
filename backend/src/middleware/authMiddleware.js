@@ -10,7 +10,7 @@ export const protect = asyncHandler(async (req, res, next) => {
             if (!token){
 
                 // erro 401 é erro de não autorizado
-                return res.status(401).json({message: "Não autorizado, faça login"});
+                return res.status(401).json({message: "Não autorizado, faça login."});
             }
             // verificar se o token é válido
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -20,7 +20,7 @@ export const protect = asyncHandler(async (req, res, next) => {
             // verificar se o usuário existe
             if (!user){
                 // erro 404 é erro de não encontrado
-                return res.status(404).json({message: "Usuário não encontrado"});
+                return res.status(404).json({message: "Usuário não encontrado."});
             }
             // passar o usuário para o próximo middleware
             req.user = user;
@@ -28,7 +28,7 @@ export const protect = asyncHandler(async (req, res, next) => {
             next();
     }catch(error){
         // erro 401 é erro de não autorizado
-        return res.status(401).json({message: "Não autorizado, faça login"});
+        return res.status(401).json({message: "Não autorizado, faça login."});
     }
 });
 
