@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.Auth-form-container{ 
+    height: 100vh;
+    background: url("../public/bg-login.png") no-repeat center center fixed;
+
+}
