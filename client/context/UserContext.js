@@ -109,6 +109,31 @@ export const UserContextProvider = ({ children }) => {
     }
 };
 
+// verificar status de login do usuario 
+const userLoginStatus = async () => { // Refazer essa funcao de verificacao depois
+    let loggedIn = false;
+    try {
+        const res = await axios.get(`${serverUrl}/api/v1/status`, {
+            withCredentials: true, 
+            
+        });
+        console.log("aqui ta sendo armazenado",res);
+        
+        loggedIn = !!res.data;
+        setLoading(false);
+        if (!loggedIn) {
+      router.push("/login");
+        }
+    } catch (error) {
+        router.push("/login");
+        console.log("Erro ao verificar status de login", error);
+    }
+
+    console.log("usuario logado:", loggedIn);
+    
+    return loggedIn;
+};
+
 // deslogar o usuario
     const logoutUser = async () => {
         try {
@@ -136,30 +161,6 @@ if (name === "name") {
         ...prevState,
         [name]: value,
     }));
-};
-// verificar status de login do usuario
-
-    const userLoginStatus = async () => {
-    let loggedIn = false;
-    try {
-        const res = await axios.get(`${serverUrl}/api/v1/status`, {
-            withCredentials: true, 
-        });
-
-        loggedIn = !!res.data;
-
-        setLoading(false);
-
-        if (!loggedIn) {
-            router.push("/login");
-        }
-    } catch (error) {
-        console.log("Erro ao verificar status de login", error);
-    }
-
-    console.log("usuario logado:", loggedIn);
-    
-    return loggedIn;
 };
 
 
