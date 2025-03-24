@@ -115,24 +115,20 @@ const userLoginStatus = async () => { // Refazer essa funcao de verificacao depo
     try {
         const res = await axios.get(`${serverUrl}/api/v1/status`, {
             withCredentials: true, 
-            
         });
-        console.log("aqui ta sendo armazenado",res);
-        
+
         loggedIn = !!res.data;
         setLoading(false);
         if (!loggedIn) {
       router.push("/login");
         }
     } catch (error) {
-        router.push("/login");
         console.log("Erro ao verificar status de login", error);
     }
-
-    console.log("usuario logado:", loggedIn);
-    
+    console.log("Usuario está logado:  ", loggedIn);
     return loggedIn;
 };
+
 
 // deslogar o usuario
     const logoutUser = async () => {
@@ -149,7 +145,56 @@ const userLoginStatus = async () => { // Refazer essa funcao de verificacao depo
             console.log("Erro ao fazer logout", error);
             toast.error(error.response.data.message);       
         }
-    };
+};
+
+// pegar detalhes do usuario
+    const getUser = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${serverUrl}/api/v1/usuario`,{
+                withCredentials: true, 
+            });
+            setUser((prevState) => {
+                return {
+                    ...prevState,
+                    ...res.data,
+                };
+            });
+
+            setLoading(false);
+        } catch (error) {
+            console.log("Não foi possivel pegar o usuario: ", error);
+            setLoading(false);
+            toast.error(error.response.data.message)
+        }
+};
+
+// atualizar a bio do usuario
+const UserUpdate = async (e, data) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+        const res = await axios.patch(`${serverUrl}/api/v1/usuario`, data, {
+            withCredentials: true,
+        });
+        // atualizar estado do usuario
+        setUser((prevState) => {
+            return {
+                ...prevState,
+                ...res.data,
+            };
+        });
+        toast.success("Bio atualizada com sucesso!");
+        setLoading(false);
+
+    } catch (error) {
+        console.log("Erro ao atualizar a bio do usuario: ", error);
+        setLoading(false);
+        toast.error(error.response.data.message);
+    }
+    
+};
 
 const handlerUserInput = (name) => (e) => {
     let value = e.target.value;
@@ -163,11 +208,20 @@ if (name === "name") {
     }));
 };
 
-
 useEffect(() => {
-   userLoginStatus();
-}, [])
+    const loginStatusGetUser = async () => {
+        const isloggedIn = await userLoginStatus();
 
+        console.log("Usuario está logado2: ", isloggedIn);
+        
+        if (isloggedIn) {
+            await getUser();
+        }
+    };
+    loginStatusGetUser();
+}, []);
+
+console.log("Usuario: ", user);
 
 return (
     <UserContext.Provider value={{
@@ -175,7 +229,11 @@ return (
         userState,
         handlerUserInput,
         loginUser,
-        logoutUser
+        logoutUser,
+        userLoginStatus,
+        getUser,
+        user,
+        UserUpdate,
         }}>
         {children}
     </UserContext.Provider>
