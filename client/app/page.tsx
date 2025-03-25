@@ -7,7 +7,7 @@ import { useState } from "react";
 export default function Home() {
   useRedirect("/login");
   // Obtenha todos os valores necessários de uma só vez
-  const { logoutUser, user, handlerUserInput, userState, UserUpdate } = useUserContext();
+  const { logoutUser, user, handlerUserInput, userState, UserUpdate, verificacaoEmail, } = useUserContext();
   const {name, photo, isVerified, bio} = user;
   const [Open, setOpen] = useState(false);
 
@@ -30,7 +30,8 @@ export default function Home() {
           className="w-[40px] h-[40px] rounded-full" />
 
           {!isVerified && 
-             <button className="px-4 py-2 bg-blue-500 text-white rounded-md">
+             <button className="px-4 py-2 bg-blue-500 text-white rounded-md"
+             onClick={verificacaoEmail}>
               Verificar e-mail 
               </button>}
           <button onClick={logoutUser} className="px-4 py-2 bg-blue-500 text-white rounded-md">
@@ -59,7 +60,7 @@ export default function Home() {
           </div>
           <button type="submit" 
           onClick={ (e) => UserUpdate(e, { bio: userState.bio} )}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md" >
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md" >
             Atualizar Bio
           </button>
           </form>

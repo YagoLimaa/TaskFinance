@@ -80,6 +80,7 @@ export const UserContextProvider = ({ children }) => {
 // fazer login do usuario
     const loginUser = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
         const res = await axios.post(`${serverUrl}/api/v1/login`, {
             email: userState.email,
@@ -98,6 +99,8 @@ export const UserContextProvider = ({ children }) => {
        
     });
 
+       // Buscar os dados do usuário logado
+       await getUser();
 
       // push user to the dashboard page
       router.push("/");
@@ -106,6 +109,8 @@ export const UserContextProvider = ({ children }) => {
         console.log("Erro ao fazer login", error);
         toast.error(error.response.data.message);
         
+    } finally {
+        setLoading(false);
     }
 };
 
@@ -154,12 +159,7 @@ const userLoginStatus = async () => { // Refazer essa funcao de verificacao depo
             const res = await axios.get(`${serverUrl}/api/v1/usuario`,{
                 withCredentials: true, 
             });
-            setUser((prevState) => {
-                return {
-                    ...prevState,
-                    ...res.data,
-                };
-            });
+            setUser(res.data);
 
             setLoading(false);
         } catch (error) {
@@ -195,6 +195,24 @@ const UserUpdate = async (e, data) => {
     }
     
 };
+
+
+// verificar email 
+const verificacaoEmail = async (e) => {
+    setLoading(true);
+    try {
+        const res = await axios.post(`${serverUrl}/api/v1/verificar-email`,{}, {
+            withCredentials: true,
+        });
+        toast.success("Email de verificação enviado com sucesso!");
+        setLoading(false);
+    } catch (error) {
+        
+        console.log("Erro ao enviar o email de verificação! ", error);
+        setLoading(false);
+        toast.error(error.response.data.message);
+    }
+}
 
 const handlerUserInput = (name) => (e) => {
     let value = e.target.value;
@@ -234,6 +252,7 @@ return (
         getUser,
         user,
         UserUpdate,
+        verificacaoEmail,
         }}>
         {children}
     </UserContext.Provider>
