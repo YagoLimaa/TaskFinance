@@ -6,6 +6,6 @@
 
 .Auth-form-container{ 
     height: 100vh;
-    background: url("../public/bg-login.png") no-repeat center center fixed;
+    background: url("/bg-login.png") no-repeat center center fixed;
 
 }

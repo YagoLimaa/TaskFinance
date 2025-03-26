@@ -74,6 +74,15 @@ function LoginPage() {
                   )}
                 </button>
               </div>
+
+              <div className="mt-4 flex justify-end">
+                <a
+                href="/redefinir-senha"
+                className="font-bold text-[#2ECC71] text-[15px] hover:text-[#7263F3] transiton-all duration-300"> 
+                Esqueceu sua senha?
+                </a>
+
+              </div>
             </div>
 
 

@@ -160,8 +160,8 @@ const userLoginStatus = async () => { // Refazer essa funcao de verificacao depo
                 withCredentials: true, 
             });
             setUser(res.data);
-
             setLoading(false);
+            return res.data;
         } catch (error) {
             console.log("Não foi possivel pegar o usuario: ", error);
             setLoading(false);
@@ -209,10 +209,60 @@ const verificacaoEmail = async (e) => {
     } catch (error) {
         
         console.log("Erro ao enviar o email de verificação! ", error);
+
+        getUser();
         setLoading(false);
         toast.error(error.response.data.message);
     }
 }
+
+// verificar email do usuario
+const VerficarUsuario = async (verificationToken) => {
+    setLoading(true);
+    try {
+        const res = await axios.post(`${serverUrl}/api/v1/verificar-usuario/${verificationToken}`,{}, {
+            withCredentials: true,
+        }
+    );
+        toast.success("Email verificado com sucesso!");
+
+           // Atualizar os dados do usuário após a verificação
+           const updateUsario = await getUser();
+            setUser(updateUsario);
+
+        setLoading(false);
+        router.push("/");
+
+    } catch (error) {
+        
+        console.log("Erro ao verificar o email! ", error);
+        toast.error(error.response.data.message);
+        setLoading(false);
+    }
+}
+
+//Esqueci minha senha
+
+const redefinirSenhaEmail = async (email) => { 
+    setLoading(true);
+
+    try {
+        const res = await axios.post(`${serverUrl}/api/v1/redefinir-senha`, {email}, {
+            withCredentials: true,
+        });
+
+        toast.success("Email de redefinição de senha enviado com sucesso!");
+        setLoading(false);
+        
+
+    } catch (error) {
+        console.log("Erro ao enviar o email de redefinição de senha! ", error);
+        toast.error(error.response.data.message);
+        setLoading(false);
+        
+    }
+
+};
 
 const handlerUserInput = (name) => (e) => {
     let value = e.target.value;
@@ -253,6 +303,8 @@ return (
         user,
         UserUpdate,
         verificacaoEmail,
+        VerficarUsuario,
+        redefinirSenhaEmail,
         }}>
         {children}
     </UserContext.Provider>

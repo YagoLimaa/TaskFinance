@@ -279,7 +279,7 @@ export const EmailVerificar = asyncHandler(async (req, res) => {
 
     // verificar o link
 
-    const LinkVerificacao = `${process.env.CLIENT_URL}/verificar-email/${verificationToken}`;
+    const LinkVerificacao = `${process.env.CLIENT_URL}/verificar-usuario/${verificationToken}`;
 
     // mandar email para o usuario sobre a verificação
 
