@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginUsario,logoutUsuario,registroUser,getPefilUsuario,updateUsuario, UsarioStatusLogin, EmailVerificar, UsuarioVerificar, RedefinirSenha, TokenRedefinirSenha, MudarSenha, } from '../controllers/auth/userController.js';
+import { loginUsario,logoutUsuario,registroUser,getPefilUsuario,updateUsuario, UsarioStatusLogin, EmailVerificar, UsuarioVerificar, RedefinirSenha, TokenRedefinirSenha, MudarSenha, ValidarToken} from '../controllers/auth/userController.js';
 import { adminMiddleware, admSupremo, protect } from '../middleware/authMiddleware.js';
 import { deleteUsuario, getUsuarios } from '../controllers/auth/ControleAdmin.js';
 
@@ -36,9 +36,11 @@ router.post("/verificar-usuario/:verificationToken", UsuarioVerificar);
 router.post("/redefinir-senha", RedefinirSenha);
 
 // redifinir senha >> token
-router.post("/senha-redefinir/:senhatoken", TokenRedefinirSenha);
+router.patch("/senha-redefinir/:senhatoken", TokenRedefinirSenha);
 
 // mudar a senha
 router.patch("/mudar-senha", protect, MudarSenha);
+
+router.get("/validate-token/:senhatoken", ValidarToken)
 
 export default router;

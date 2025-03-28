@@ -413,33 +413,41 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
     export const TokenRedefinirSenha = asyncHandler (async (req, res) => {
     const { senhatoken } = req.params;
     const { password } = req.body;
-
-    if (!password) {
-        return res.status(400).json({ message: "Por favor, insira uma nova senha! " });
-    }
-
-
+    
+ 
+    console.log("Token recebido:", senhatoken);
     //hash token, então comparar com o token no banco de dados
 
     const hashedToken = hashToken(senhatoken);
+    console.log("Token hash gerado:", hashedToken);
 
     // encontrar token no banco de dados se exuste e nao esta expirado
 
     const userToken = await Token.findOne({ 
         passwordResetToken: hashedToken, 
         expireAt: { $gt: Date.now() 
-        }
+        },
     });
 
     if(!userToken) {
+        console.log("Token não encontrado ou expirado");
         return res.status(404).json({ message: "Token inválido ou expirado!" });
     }
 
+    console.log("Token encontrado no banco de dados:", userToken);
+    // encontrar o usuario pelo id
     const user = await User.findOne(userToken.userId);
+
+    console.log("Usuário encontrado:", user);
 
     // fazer atuazliazacao da senha
     user.password = password;
     await user.save();
+
+      // Remover o token de redefinição de senha do banco de dados
+      await userToken.deleteOne();
+
+      console.log("Senha redefinida com sucesso para o usuário:", user._id);
 
     return res.status(200).json({ message: "Senha redefinida com sucesso!" });
 });
@@ -481,3 +489,35 @@ export const MudarSenha = asyncHandler (async (req, res) => {
 
     
 });
+
+export const ValidarToken = async (req, res) => {
+    const { senhatoken } = req.params;
+    try {
+      // Hash do token recebido
+      const hashedToken = hashToken(senhatoken);
+      console.log("Token hash gerado:", hashedToken);
+  
+      // Verifique se o token existe no banco de dados
+      const tokenValido = await Token.findOne({ passwordResetToken: hashedToken });
+  
+      if (!tokenValido) {
+        console.log("Token não encontrado no banco de dados.");
+        return res.status(400).json({ valid: false, message: "Token inválido ou expirado" });
+      }
+  
+      // Verifique se o token expirou
+      const agora = new Date();
+      console.log("Data de expiração do token:", tokenValido.expireAt);
+      if (tokenValido.expireAt < agora) {
+        console.log("Token expirado.");
+        return res.status(400).json({ valid: false, message: "Token expirado" });
+      }
+  
+      // Token é válido
+      console.log("Token válido.");
+      return res.status(200).json({ valid: true });
+    } catch (error) {
+      console.error("Erro ao validar o token:", error);
+      return res.status(500).json({ valid: false, message: "Erro no servidor" });
+    }
+  };

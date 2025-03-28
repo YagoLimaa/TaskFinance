@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useUserContext } from "@/context/UserContext";
+
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 
 function CadastroForm() {

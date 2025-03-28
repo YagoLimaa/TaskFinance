@@ -264,6 +264,26 @@ const redefinirSenhaEmail = async (email) => {
 
 };
 
+// Esqueci minha senha
+const redefinirSenha = async (password, token) => {
+    setLoading(true);
+
+    try {
+        const res = await axios.patch(`${serverUrl}/api/v1/senha-redefinir/${token}`, {password,}, 
+        {
+            withCredentials: true,
+        });
+
+        toast.success("Senha redefinida com sucesso!");
+        setLoading(false);
+        router.push("/login");
+
+    } catch (error) {
+        console.log("Erro ao redefinir a senha! ", error);
+        toast.error(error.response.data.message);
+        setLoading(false);
+    }
+}
 const handlerUserInput = (name) => (e) => {
     let value = e.target.value;
 
@@ -305,6 +325,7 @@ return (
         verificacaoEmail,
         VerficarUsuario,
         redefinirSenhaEmail,
+        redefinirSenha,
         }}>
         {children}
     </UserContext.Provider>
