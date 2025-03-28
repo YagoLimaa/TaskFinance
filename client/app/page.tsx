@@ -3,6 +3,7 @@
 import { useUserContext } from "@/context/UserContext";
 import useRedirect from "@/hook/useUserRedirect";
 import { useState } from "react";
+import TrocarSenhaForm from "./Components/auth/TrocarSenhaForm/TrocarSenhaForm";
 
 export default function Home() {
   useRedirect("/login");
@@ -79,6 +80,7 @@ export default function Home() {
           </form>
         )}
       </section>
+      <TrocarSenhaForm />
     </main>
   );
 }

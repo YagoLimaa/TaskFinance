@@ -284,6 +284,25 @@ const redefinirSenha = async (password, token) => {
         setLoading(false);
     }
 }
+
+// trocar senha
+const trocarSenha = async (currentPassword, newPassword) => {
+    setLoading(true);
+
+    try {
+        const res = await axios.patch(`${serverUrl}/api/v1/mudar-senha`, {currentPassword, newPassword}, {
+            withCredentials: true,
+        });
+
+        toast.success("1Senha alterada com sucesso!");
+        setLoading(false);
+    } catch (error) {
+        console.log("Erro ao alterar a senha! ", error);
+        toast.error(error.response.data.message);
+        setLoading(false);
+    }
+}
+
 const handlerUserInput = (name) => (e) => {
     let value = e.target.value;
 
@@ -326,6 +345,7 @@ return (
         VerficarUsuario,
         redefinirSenhaEmail,
         redefinirSenha,
+        trocarSenha,
         }}>
         {children}
     </UserContext.Provider>
