@@ -8,7 +8,7 @@ import TrocarSenhaForm from "./Components/auth/TrocarSenhaForm/TrocarSenhaForm";
 export default function Home() {
   useRedirect("/login");
 
-  const { logoutUser, user, handlerUserInput, userState, UserUpdate, verificacaoEmail } = useUserContext();
+  const { logoutUser, user, handlerUserInput, userState, UserUpdate, verificacaoEmail, allUsers, deleteUsuario } = useUserContext();
   const { name, photo, isverified, bio } = user || {}; // Garantir que `user` não seja `undefined`
   const [Open, setOpen] = useState(false);
 
@@ -48,7 +48,7 @@ export default function Home() {
       </header>
 
       <section>
-        <p className="text-[#999] text-[2rem]">{bio}</p>
+        
         <h1>
           <button
             onClick={bioUpdt}
@@ -80,7 +80,39 @@ export default function Home() {
           </form>
         )}
       </section>
-      <TrocarSenhaForm />
+      <div className="mt-4 flex gap-8">
+        <div className="flex-1">
+          <TrocarSenhaForm />
+        </div>
+        <div className="flex-1">
+          {user.role === "admin" || user.role === "adminSupremo" ? (
+            <ul>
+              {allUsers
+                .filter((u: any) => u._id !== user._id) // Filtra o usuário logado
+                .map((user: any) => (
+                  <li
+                    key={user.id || user._id}
+                    className="mb-4 px-2 py-3 border grid grid-cols-4 items-center gap-6 rounded-md border-gray-300"
+                  >
+                    <img
+                      src={user.photo}
+                      alt={user.name}
+                      className="w-[40px] h-[40px] rounded-full"
+                    />
+                    <p>{user.name}</p>
+                    <p className="max-h-[70px] overflow-y-auto break-words">
+                      {user.bio}
+                    </p>
+                    <button onClick={() => deleteUsuario(user._id)}>
+                      <i className="fas fa-trash text-red-600"></i>
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          ) : null}
+        </div>
+      </div>
+      
     </main>
   );
 }

@@ -187,16 +187,12 @@ const UserUpdate = async (e, data) => {
         });
         toast.success("Bio atualizada com sucesso!");
         setLoading(false);
-
     } catch (error) {
         console.log("Erro ao atualizar a bio do usuario: ", error);
         setLoading(false);
         toast.error(error.response.data.message);
     }
-    
 };
-
-
 // verificar email 
 const verificacaoEmail = async (e) => {
     setLoading(true);
@@ -294,11 +290,27 @@ const trocarSenha = async (currentPassword, newPassword) => {
             withCredentials: true,
         });
 
-        toast.success("1Senha alterada com sucesso!");
+        toast.success("Senha alterada com sucesso!");
         setLoading(false);
     } catch (error) {
         console.log("Erro ao alterar a senha! ", error);
         toast.error(error.response.data.message);
+        setLoading(false);
+    }
+}
+
+// rotas do ADM
+
+const getUsuarios = async () => {
+    setLoading(true);
+    try {
+        const res = await axios.get(`${serverUrl}/api/v1/admin/usuarios`, {
+            withCredentials: true,
+        });
+        setAllUsers(res.data);
+        setLoading(false);
+    } catch (error) {
+        console.log("Erro ao pegar todos os usuarios: ", error);
         setLoading(false);
     }
 }
@@ -315,6 +327,26 @@ if (name === "name") {
     }));
 };
 
+// apagar usuario
+
+const deleteUsuario = async (id) => {
+    setLoading(true);
+    try {
+        const res = await axios.delete(`${serverUrl}/api/v1/admin/usuario/${id}`, {
+            withCredentials: true,
+        });
+        toast.success("Usuário apagado com sucesso!");
+        setLoading(false);
+
+        // Atualizar a lista de usuários após a exclusão
+        getUsuarios();
+    } catch (error) {
+        console.log("Erro ao apagar o usuário: ", error);
+        setLoading(false);
+        toast.error(error.response.data.message);
+    }
+}
+
 useEffect(() => {
     const loginStatusGetUser = async () => {
         const isloggedIn = await userLoginStatus();
@@ -326,9 +358,19 @@ useEffect(() => {
         }
     };
     loginStatusGetUser();
+    
 }, []);
 
-console.log("Usuario: ", user);
+useEffect(() => {
+    if (user.role === "admin" || user.role === "adminSupremo") {
+        console.log("ta chegando ate aqui");
+        
+        getUsuarios();
+    }
+}
+, [user.role]);
+
+
 
 return (
     <UserContext.Provider value={{
@@ -346,6 +388,8 @@ return (
         redefinirSenhaEmail,
         redefinirSenha,
         trocarSenha,
+        allUsers,
+        deleteUsuario,
         }}>
         {children}
     </UserContext.Provider>
