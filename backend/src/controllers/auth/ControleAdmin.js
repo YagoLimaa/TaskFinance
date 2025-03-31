@@ -5,7 +5,6 @@ export const deleteUsuario = asyncHandler(async (req, res) => {
     const {id} = req.params;
 
     // tentativa de deletar usuário
-
     try {
         const user = await User.findByIdAndDelete(id);
         if (!user){
@@ -18,7 +17,6 @@ export const deleteUsuario = asyncHandler(async (req, res) => {
 });
 
 // pegar todos os usuarios
-
 export const getUsuarios = asyncHandler(async (req, res) => {
     try {
         const users = await User.find({});

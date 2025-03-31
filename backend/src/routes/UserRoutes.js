@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginUsario,logoutUsuario,registroUser,getPefilUsuario,updateUsuario, UsarioStatusLogin, EmailVerificar, UsuarioVerificar, RedefinirSenha, TokenRedefinirSenha, MudarSenha, ValidarToken} from '../controllers/auth/userController.js';
+import { loginUsario,logoutUsuario,registroUser,getPefilUsuario,updateUsuario, UsarioStatusLogin, EmailVerificar, UsuarioVerificar, RedefinirSenha, TokenRedefinirSenha, MudarSenha, ValidarToken, updateAdminUser } from '../controllers/auth/userController.js';
 import { adminMiddleware, admSupremo, protect } from '../middleware/authMiddleware.js';
 import { deleteUsuario, getUsuarios } from '../controllers/auth/ControleAdmin.js';
 
@@ -16,6 +16,7 @@ router.patch("/usuario", protect, updateUsuario);
 
 // rotas do adm
 router.delete("/admin/usuario/:id", protect,adminMiddleware, deleteUsuario);
+router.patch("/admin/usuario/:id", protect, admSupremo, updateAdminUser);
 
 
 // pegar todos os usuários

@@ -58,7 +58,6 @@ export const UserContextProvider = ({ children }) => {
         }
         try {
             const res = await axios.post(`${serverUrl}/api/v1/registro`, userState);
-            console.log("Registro: ", res.data);
 
             toast.success("Registro bem-sucedido!");
 
@@ -130,7 +129,6 @@ const userLoginStatus = async () => { // Refazer essa funcao de verificacao depo
     } catch (error) {
         console.log("Erro ao verificar status de login", error);
     }
-    console.log("Usuario está logado:  ", loggedIn);
     return loggedIn;
 };
 
@@ -300,7 +298,6 @@ const trocarSenha = async (currentPassword, newPassword) => {
 }
 
 // rotas do ADM
-
 const getUsuarios = async () => {
     setLoading(true);
     try {
@@ -314,6 +311,27 @@ const getUsuarios = async () => {
         setLoading(false);
     }
 }
+
+const updateUsuario = async (id, data) => {
+    setLoading(true);
+    try {
+
+        // Faz a requisição para a nova rota
+        const res = await axios.patch(`${serverUrl}/api/v1/admin/usuario/${id}`, data, {
+            withCredentials: true,
+        });
+
+        toast.success("Usuário atualizado com sucesso!");
+        setLoading(false);
+
+        // Atualizar a lista de usuários após a edição
+        await getUsuarios();
+    } catch (error) {
+        console.log("Erro ao atualizar o usuário: ", error);
+        setLoading(false);
+        toast.error(error.response?.data?.message || "Erro ao atualizar o usuário");
+    }
+};
 
 const handlerUserInput = (name) => (e) => {
     let value = e.target.value;
@@ -350,8 +368,6 @@ const deleteUsuario = async (id) => {
 useEffect(() => {
     const loginStatusGetUser = async () => {
         const isloggedIn = await userLoginStatus();
-
-        console.log("Usuario está logado2: ", isloggedIn);
         
         if (isloggedIn) {
             await getUser();
@@ -363,8 +379,6 @@ useEffect(() => {
 
 useEffect(() => {
     if (user.role === "admin" || user.role === "adminSupremo") {
-        console.log("ta chegando ate aqui");
-        
         getUsuarios();
     }
 }
@@ -390,6 +404,7 @@ return (
         trocarSenha,
         allUsers,
         deleteUsuario,
+        updateUsuario,
         }}>
         {children}
     </UserContext.Provider>

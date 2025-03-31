@@ -206,7 +206,47 @@ export const updateUsuario = asyncHandler(async (req, res) => {
     }
 });
 
+export const updateAdminUser = asyncHandler(async (req, res) => {
+    const { id } = req.params; // ID do usuário a ser atualizado
+    const { name, email, bio, role } = req.body; // Dados enviados pelo frontend
 
+    try {
+        // Encontrar o usuário pelo ID
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: "Usuário não encontrado" });
+        }
+
+
+        // Atualizar os campos permitidos
+        if (name) {
+            user.name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(); // Capitalizar o nome
+        }
+        if (email) {
+            user.email = email;
+        }
+        if (bio) {
+            user.bio = bio;
+        }
+        if (role) {
+            user.role = role;
+        }
+
+        // Salvar as alterações
+        const updatedUser = await user.save();
+
+        
+
+        res.status(200).json({
+            message: "Usuário atualizado com sucesso",
+            user: updatedUser,
+        });
+    } catch (error) {
+        console.error("Erro ao atualizar o usuário:", error);
+        res.status(500).json({ message: "Erro ao atualizar o usuário" });
+    }
+});
 
 // status de login
 
@@ -321,7 +361,6 @@ export const UsuarioVerificar = asyncHandler(async (req, res) => {
         expireAt: {$gt: Date.now()},
     });
     if (!UsuarioToken) {
-        console.log("Token inválido ou expirado");
         return res.status(400).json({ message: "Token inválido ou expirado" });
     }
 
@@ -413,16 +452,11 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
     export const TokenRedefinirSenha = asyncHandler (async (req, res) => {
     const { senhatoken } = req.params;
     const { password } = req.body;
-    
- 
-    console.log("Token recebido:", senhatoken);
-    //hash token, então comparar com o token no banco de dados
 
+    //hash token, então comparar com o token no banco de dados
     const hashedToken = hashToken(senhatoken);
-    console.log("Token hash gerado:", hashedToken);
 
     // encontrar token no banco de dados se exuste e nao esta expirado
-
     const userToken = await Token.findOne({ 
         passwordResetToken: hashedToken, 
         expireAt: { $gt: Date.now() 
@@ -430,15 +464,10 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
     });
 
     if(!userToken) {
-        console.log("Token não encontrado ou expirado");
         return res.status(404).json({ message: "Token inválido ou expirado!" });
     }
-
-    console.log("Token encontrado no banco de dados:", userToken);
     // encontrar o usuario pelo id
     const user = await User.findOne(userToken.userId);
-
-    console.log("Usuário encontrado:", user);
 
     // fazer atuazliazacao da senha
     user.password = password;
@@ -447,7 +476,6 @@ export const RedefinirSenha = asyncHandler (async (req, res) => {
       // Remover o token de redefinição de senha do banco de dados
       await userToken.deleteOne();
 
-      console.log("Senha redefinida com sucesso para o usuário:", user._id);
 
     return res.status(200).json({ message: "Senha redefinida com sucesso!" });
 });
@@ -495,26 +523,20 @@ export const ValidarToken = async (req, res) => {
     try {
       // Hash do token recebido
       const hashedToken = hashToken(senhatoken);
-      console.log("Token hash gerado:", hashedToken);
-  
       // Verifique se o token existe no banco de dados
       const tokenValido = await Token.findOne({ passwordResetToken: hashedToken });
   
       if (!tokenValido) {
-        console.log("Token não encontrado no banco de dados.");
         return res.status(400).json({ valid: false, message: "Token inválido ou expirado" });
       }
   
       // Verifique se o token expirou
       const agora = new Date();
-      console.log("Data de expiração do token:", tokenValido.expireAt);
       if (tokenValido.expireAt < agora) {
-        console.log("Token expirado.");
         return res.status(400).json({ valid: false, message: "Token expirado" });
       }
   
       // Token é válido
-      console.log("Token válido.");
       return res.status(200).json({ valid: true });
     } catch (error) {
       console.error("Erro ao validar o token:", error);

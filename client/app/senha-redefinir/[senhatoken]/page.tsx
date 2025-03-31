@@ -26,7 +26,6 @@ function Page() {
       const token = Array.isArray(params.senhatoken)
         ? params.senhatoken[0]
         : params.senhatoken;
-      console.log("esse é o token:  ", token);
     
       if (!token) {
         toast.error("Token inválido ou ausente");
