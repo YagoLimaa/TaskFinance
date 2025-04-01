@@ -172,26 +172,41 @@ export const getPefilUsuario = asyncHandler(async (req, res) => {
 
 // atualizar o perfil do usuário
 export const updateUsuario = asyncHandler(async (req, res) => {
-    // pegar o usuario pelo token > protegido pelo middleware
+    // Pegar o usuário pelo token (protegido pelo middleware)
     const user = await User.findById(req.user._id);
 
-    if (user){
-        // atualizar os dados do usuário
-        const {name, bio, photo} = req.body;
+    if (!user) {
+        // Retornar erro se o usuário não for encontrado
+        return res.status(404).json({ message: "Usuário não encontrado" });
+    }
 
-    // salvar o nome com a primeira letra maiscula 
+    // Atualizar os dados do usuário
+    const { name, bio, photo } = req.body;
+
+    // Validação do nome
+    if (name && name.trim() === "") {
+        return res.status(400).json({ message: "O nome não pode estar vazio" });
+    }
+
+    // Validação da URL da foto (opcional)
+    if (photo && !photo.startsWith("http")) {
+        return res.status(400).json({ message: "A URL da foto é inválida" });
+    }
+
+    // Atualizar os campos permitidos
     if (name) {
-            user.name = capitalizeFirstLetter(name);
-        }
+        user.name = capitalizeFirstLetter(name);
+    }
+    user.bio = bio || user.bio;
+    user.photo = photo || user.photo;
 
+    // Salvar as alterações no banco de dados
+    const atualizado = await user.save();
 
-        // salvar os dados atualizados
-        user.bio = req.body.bio || user.bio;
-        user.photo = req.body.photo || user.photo;
-
-        const atualizado = await user.save();
-
-        res.status(200).json({
+    // Retornar os dados atualizados
+    res.status(200).json({
+        message: "Perfil atualizado com sucesso",
+        user: {
             _id: atualizado._id,
             name: atualizado.name,
             email: atualizado.email,
@@ -199,11 +214,8 @@ export const updateUsuario = asyncHandler(async (req, res) => {
             photo: atualizado.photo,
             bio: atualizado.bio,
             isverified: atualizado.isverified,
-        });
-    }else{
-        // erro 404 é erro de não encontrado
-        res.status(404).json({message: "Usuário não encontrado"});
-    }
+        },
+    });
 });
 
 export const updateAdminUser = asyncHandler(async (req, res) => {
