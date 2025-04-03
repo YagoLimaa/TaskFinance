@@ -172,92 +172,100 @@ export const getPefilUsuario = asyncHandler(async (req, res) => {
 
 // atualizar o perfil do usuário
 export const updateUsuario = asyncHandler(async (req, res) => {
-    // Pegar o usuário pelo token (protegido pelo middleware)
-    const user = await User.findById(req.user._id);
+  const { name, bio } = req.body; // Removemos o e-mail da requisição
+
+  try {
+    // Buscar o usuário atual no banco de dados
+    const user = await User.findById(req.user.id);
 
     if (!user) {
-        // Retornar erro se o usuário não for encontrado
-        return res.status(404).json({ message: "Usuário não encontrado" });
+      return res.status(404).json({ message: "Usuário não encontrado" });
     }
 
-    // Atualizar os dados do usuário
-    const { name, bio, photo } = req.body;
-
-    // Validação do nome
-    if (name && name.trim() === "") {
-        return res.status(400).json({ message: "O nome não pode estar vazio" });
-    }
-
-    // Validação da URL da foto (opcional)
-    if (photo && !photo.startsWith("http")) {
-        return res.status(400).json({ message: "A URL da foto é inválida" });
-    }
-
-    // Atualizar os campos permitidos
-    if (name) {
-        user.name = capitalizeFirstLetter(name);
-    }
+    // Atualizar os outros campos
+    user.name = name || user.name;
     user.bio = bio || user.bio;
-    user.photo = photo || user.photo;
 
     // Salvar as alterações no banco de dados
     const atualizado = await user.save();
 
-    // Retornar os dados atualizados
     res.status(200).json({
-        message: "Perfil atualizado com sucesso",
-        user: {
-            _id: atualizado._id,
-            name: atualizado.name,
-            email: atualizado.email,
-            role: atualizado.role,
-            photo: atualizado.photo,
-            bio: atualizado.bio,
-            isverified: atualizado.isverified,
-        },
+      message: "Perfil atualizado com sucesso",
+      user: {
+        _id: atualizado._id,
+        name: atualizado.name,
+        email: atualizado.email, // O e-mail permanece inalterado
+        bio: atualizado.bio,
+        isverified: atualizado.isverified,
+      },
     });
+  } catch (error) {
+    console.error("Erro ao atualizar o perfil:", error);
+    res.status(500).json({ message: "Erro ao atualizar o perfil" });
+  }
 });
 
 export const updateAdminUser = asyncHandler(async (req, res) => {
-    const { id } = req.params; // ID do usuário a ser atualizado
-    const { name, email, bio, role } = req.body; // Dados enviados pelo frontend
+  const { id } = req.params; // ID do usuário a ser atualizado
+  const { name, email, bio, role } = req.body; // Dados enviados pelo frontend
+  const loggedUserRole = req.user.role; // Papel do usuário logado
 
-    try {
-        // Encontrar o usuário pelo ID
-        const user = await User.findById(id);
-
-        if (!user) {
-            return res.status(404).json({ message: "Usuário não encontrado" });
-        }
-
-
-        // Atualizar os campos permitidos
-        if (name) {
-            user.name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(); // Capitalizar o nome
-        }
-        if (email) {
-            user.email = email;
-        }
-        if (bio) {
-            user.bio = bio;
-        }
-        if (role) {
-            user.role = role;
-        }
-
-        // Salvar as alterações
-        const updatedUser = await user.save();
-
-        
-
-        res.status(200).json({
-            message: "Usuário atualizado com sucesso",
-            user: updatedUser,
-        });
-    } catch (error) {
-        console.error("Erro ao atualizar o usuário:", error);
-        res.status(500).json({ message: "Erro ao atualizar o usuário" });
+  try {
+    // Verificar se o usuário logado tem permissão para alterar outros usuários
+    if (loggedUserRole !== "admin" && loggedUserRole !== "adminSupremo") {
+      return res.status(403).json({ message: "Você não tem permissão para alterar outros usuários" });
     }
+
+    // Encontrar o usuário pelo ID
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    }
+
+    // Verificar se o e-mail foi alterado
+    if (email && email !== user.email) {
+      // Apenas admin ou adminSupremo podem alterar o e-mail
+      if (loggedUserRole === "admin" || loggedUserRole === "adminSupremo") {
+        // Verificar se o novo e-mail já está em uso por OUTRO usuário
+        const emailExists = await User.findOne({
+          email,
+          _id: { $ne: id }, // Excluir o próprio usuário da busca
+        });
+
+        if (emailExists) {
+          return res.status(400).json({ message: "E-mail já está em uso" });
+        }
+
+        // Atualizar o e-mail
+        user.email = email;
+      } else {
+        return res.status(403).json({ message: "Você não tem permissão para alterar o e-mail" });
+      }
+    }
+
+    // Atualizar os outros campos
+    if (name) {
+      user.name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase(); // Capitalizar o nome
+    }
+    if (bio !== undefined) {
+      user.bio = bio;
+    }
+    if (role && loggedUserRole === "adminSupremo") {
+      user.role = role; // Apenas adminSupremo pode alterar o papel
+    }
+
+    // Salvar as alterações
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      message: "Usuário atualizado com sucesso",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Erro ao atualizar o usuário:", error);
+    res.status(500).json({ message: "Erro ao atualizar o usuário" });
+  }
 });
 
 // status de login

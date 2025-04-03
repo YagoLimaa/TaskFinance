@@ -17,10 +17,7 @@ router.patch("/usuario", protect, updateUsuario);
 // rotas do adm
 router.delete("/admin/usuario/:id", protect,adminMiddleware, deleteUsuario);
 router.patch("/admin/usuario/:id", protect, admSupremo, updateAdminUser);
-
-
-// pegar todos os usuários
-router.get("/admin/usuarios", protect, admSupremo, getUsuarios);
+router.get("/admin/usuarios", protect, adminMiddleware, getUsuarios);
 
 
 // status de login

@@ -1,30 +1,32 @@
 import asyncHandler from 'express-async-handler';
 import User from '../../models/auth/UserModel.js';
 
+// Deletar um usuário pelo ID
 export const deleteUsuario = asyncHandler(async (req, res) => {
-    const {id} = req.params;
+    const { id } = req.params;
 
-    // tentativa de deletar usuário
     try {
         const user = await User.findByIdAndDelete(id);
-        if (!user){
-            return res.status(404).json({message: "Usuário não encontrado"});
+        if (!user) {
+            return res.status(404).json({ message: "Usuário não encontrado" });
         }
-        return res.status(200).json({message: "Usuário deletado com sucesso"});
+        return res.status(200).json({ message: "Usuário deletado com sucesso" });
     } catch (error) {
-        return res.status(500).json({message: "Erro ao deletar usuário"});
+        return res.status(500).json({ message: "Erro ao deletar usuário" });
     }
 });
 
-// pegar todos os usuarios
+// Pegar todos os usuários
 export const getUsuarios = asyncHandler(async (req, res) => {
     try {
-        const users = await User.find({});
-        if (!users){
-            return res.status(404).json({message: "Usuários não encontrados"});
+        // Busca todos os usuários, excluindo o campo "senha"
+        const users = await User.find({}).select("-senha");
+        if (!users || users.length === 0) {
+            return res.status(404).json({ message: "Nenhum usuário encontrado" });
         }
         return res.status(200).json(users);
     } catch (error) {
-        res.status(500).json({message: "Erro ao pegar usuários"});
+        console.error("Erro ao buscar usuários:", error);
+        res.status(500).json({ message: "Erro ao buscar usuários" });
     }
 });
