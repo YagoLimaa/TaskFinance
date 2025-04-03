@@ -30,3 +30,21 @@ export const getUsuarios = asyncHandler(async (req, res) => {
         res.status(500).json({ message: "Erro ao buscar usuários" });
     }
 });
+
+// Verificar se o e-mail já está em uso
+export const verificarEmail = asyncHandler(async (req, res) => {
+    const { email } = req.query; // Recebe o e-mail da query string
+
+    if (!email) {
+        return res.status(400).json({ message: "E-mail não fornecido" });
+    }
+
+    // Verificar se o e-mail já está em uso
+    const emailExists = await User.findOne({ email });
+
+    if (emailExists) {
+        return res.status(200).json({ exists: true });
+    }
+
+    return res.status(200).json({ exists: false });
+});

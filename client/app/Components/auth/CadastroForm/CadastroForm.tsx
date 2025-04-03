@@ -2,6 +2,7 @@
 import React from "react";
 
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { useUserContext } from "@/context/UserContext";
 
 function CadastroForm() {
   const { registerUser, userState, handlerUserInput } = useUserContext();

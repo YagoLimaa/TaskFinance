@@ -3,6 +3,7 @@
 import { useUserContext } from "@/context/UserContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function Users() {
   const { allUsers, getUsuarios, deleteUsuario, user, UserUpdate } = useUserContext();
@@ -68,21 +69,44 @@ export default function Users() {
       return;
     }
 
-    try {
-      // Verifica se o e-mail já está em uso por outro usuário
-      const response = await fetch(`/api/usuarios/verificar-email?email=${updatedUser.email}`);
-      const emailExists = await response.json();
+    // Validação do e-mail
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex para validar e-mails
+    if (!emailRegex.test(updatedUser.email)) {
+      toast.error("Por favor, insira um e-mail válido!");
+      return;
+    }
 
-      if (emailExists && updatedUser.email !== user.email) {
-        alert("O e-mail já está em uso por outro usuário.");
-        return;
+    try {
+      // Verifica se o e-mail foi alterado
+      const originalUser = allUsers.find((u: any) => u._id === updatedUser._id); // Busca o usuário original na lista
+      if (originalUser && updatedUser.email !== originalUser.email) {
+        // Faz a requisição para verificar se o e-mail já está em uso
+        const response = await fetch(
+          `http://localhost:8000/api/v1/verificar-email-existente?email=${updatedUser.email}`,
+          {
+            method: "GET",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Erro ao verificar o e-mail.");
+        }
+
+        const { exists } = await response.json();
+
+        if (exists) {
+          toast.error("O e-mail já está em uso. Escolha outro.");
+          return;
+        }
       }
 
-      // Atualiza os dados do usuário
-      UserUpdate(updatedUser._id, updatedUser);
+      // Atualiza os dados do usuário (nome e bio, ou todos os campos se o e-mail for válido)
+      await UserUpdate(updatedUser._id, updatedUser);
       setIsEditUserOpen(false); // Fecha o formulário após salvar
+      toast.success("Usuário atualizado com sucesso!");
     } catch (error) {
       console.error("Erro ao verificar o e-mail:", error);
+      toast.error("Erro ao atualizar o usuário.");
     }
   };
 
@@ -97,7 +121,7 @@ export default function Users() {
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <img
-            src={user?.photo || "https://via.placeholder.com/40"}
+            src={user?.photo || "https://p1.hiclipart.com/preview/227/359/624/education-icon-avatar-student-share-icon-user-user-profile-education-purple-png-clipart.jpg"}
             alt={user?.name || "Usuário"}
             className="w-[30px] h-[30px] rounded-full"
           />
@@ -149,7 +173,7 @@ export default function Users() {
             className="mb-4 px-2 py-3 border grid grid-cols-4 items-center gap-6 rounded-md border-gray-300"
           >
             <img
-              src={user.photo || "https://via.placeholder.com/40"}
+              src={user.photo || "https://p1.hiclipart.com/preview/227/359/624/education-icon-avatar-student-share-icon-user-user-profile-education-purple-png-clipart.jpg"}
               alt={user.name}
               className="w-[40px] h-[40px] rounded-full"
             />
@@ -183,7 +207,7 @@ export default function Users() {
       {isEditUserOpen && (
         <div className="mt-4 max-w-[400px] w-full">
           <h2 className="text-xl font-bold mb-4">Editar Usuário</h2>
-          <form onSubmit={handleEditUserSubmit}>
+          <form onSubmit={handleEditUserSubmit} noValidate>
             <div className="flex flex-col mb-4">
               <label htmlFor="name" className="mb-1 text-gray-600">
                 Nome
@@ -203,7 +227,7 @@ export default function Users() {
                 E-mail
               </label>
               <input
-                type="email"
+                type="text" // Alterado de "email" para "text" para evitar validação automática do navegador
                 id="email"
                 value={updatedUser.email}
                 onChange={(e) =>

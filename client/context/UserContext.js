@@ -13,60 +13,199 @@ export const UserContextProvider = ({ children }) => {
   const serverUrl = "http://localhost:8000";
   const router = useRouter();
 
-  const [user, setUser] = useState({}); // Inicializa como um objeto vazio
+  const [user, setUser] = useState({});
   const [allUsers, setAllUsers] = useState([]);
+  const [userState, setUserState] = useState({
+    name: "",
+    email: "",
+    password: "",
+    ConfirmPassword: "",
+  });
+
   const [loading, setLoading] = useState(false);
 
-  // Função para buscar a lista de usuários
-  const getUsuarios = async () => {
+  // Função para manipular os inputs do formulário
+  const handlerUserInput = (name) => (e) => {
+    let value = e.target.value;
+
+    if (name === "name") {
+      value = value.replace(/[^a-zA-ZÀ-ÖØ-öø-ÿ\s-]/g, "");
+    }
+
+    setUserState((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  // Função para registrar um novo usuário
+  const registerUser = async (e) => {
+    e.preventDefault();
+
+    if (!userState.name) {
+      toast.error("Digite seu nome completo!");
+      return;
+    }
+
+    const nameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ\s-]+$/;
+    if (!nameRegex.test(userState.name)) {
+      toast.error("O nome deve conter apenas letras!");
+      return;
+    }
+
+    if (!userState.email.includes("@")) {
+      toast.error("Digite um email válido!");
+      return;
+    }
+
+    if (!userState.password) {
+      toast.error("Digite uma senha!");
+      return;
+    }
+
+    if (userState.password.length < 8) {
+      toast.error("A senha deve ter no mínimo 8 caracteres!");
+      return;
+    }
+
+    if (userState.password !== userState.ConfirmPassword) {
+      toast.error("As senhas não coincidem!");
+      return;
+    }
+
     try {
-      setLoading(true);
-      const response = await axios.get(`${serverUrl}/api/v1/admin/usuarios`, {
-        withCredentials: true,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Inclui o token no cabeçalho
-        },
+      const res = await axios.post(`${serverUrl}/api/v1/registro`, userState);
+
+      toast.success("Registro bem-sucedido!");
+
+      setUserState({
+        name: "",
+        email: "",
+        password: "",
+        ConfirmPassword: "",
       });
 
-      setAllUsers(response.data); // Atualiza a lista de usuários no estado global
-      setLoading(false);
+      router.push("/login");
     } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
-      toast.error(error.response?.data?.message || "Erro ao buscar usuários");
+      console.log("Erro ao se registrar: ", error);
+
+      toast.error(error.response.data.message);
+    }
+  };
+
+  // Função para fazer login
+  const loginUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/login`,
+        {
+          email: userState.email,
+          password: userState.password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      toast.success("Login bem-sucedido!");
+
+      // Limpar o formulário
+      setUserState({
+        email: "",
+        password: "",
+      });
+
+      // Buscar os dados do usuário logado
+      await getUser();
+
+      // Redirecionar para a página inicial
+      router.push("/");
+    } catch (error) {
+      console.log("Erro ao fazer login", error);
+      toast.error(error.response.data.message);
+    } finally {
       setLoading(false);
     }
   };
 
-  // Atualizar o perfil do usuário ou outro usuário
-  const UserUpdate = async (id, updatedUser) => {
+  // Verificar status de login do usuário
+  const userLoginStatus = async () => {
+    let loggedIn = false;
     try {
-      setLoading(true);
+      const res = await axios.get(`${serverUrl}/api/v1/status`, {
+        withCredentials: true,
+      });
 
-      // Define a URL com base no ID (atualiza outro usuário ou o próprio perfil)
-      const url = id
-        ? `${serverUrl}/api/v1/admin/usuario/${id}`
-        : `${serverUrl}/api/v1/usuario`;
+      loggedIn = !!res.data;
+      setLoading(false);
+      if (!loggedIn) {
+        router.push("/login");
+      }
+    } catch (error) {
+      console.log("Erro ao verificar status de login", error);
+    }
+    return loggedIn;
+  };
 
-      const response = await axios.patch(url, updatedUser, {
+  // Deslogar o usuário
+  const logoutUser = async () => {
+    try {
+      const res = await axios.get(`${serverUrl}/api/v1/logout`, {
+        withCredentials: true,
+      });
+
+      toast.success("Logout bem-sucedido!");
+
+      // Redirecionar para a página de login
+      router.push("/login");
+    } catch (error) {
+      console.log("Erro ao fazer logout", error);
+      toast.error(error.response.data.message);
+    }
+  };
+
+  // Pegar detalhes do usuário
+  const getUser = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${serverUrl}/api/v1/usuario`, {
+        withCredentials: true,
+      });
+      setUser(res.data);
+      setLoading(false);
+      return res.data;
+    } catch (error) {
+      console.log("Não foi possível pegar o usuário: ", error);
+      setLoading(false);
+      toast.error(error.response.data.message);
+    }
+  };
+
+  // Atualizar a bio do usuário
+  const UserUpdate = async (id, data, isAdmin = false) => {
+    setLoading(true);
+
+    try {
+      const url = isAdmin
+        ? `${serverUrl}/api/v1/admin/usuario/${id}` // Rota para administradores
+        : `${serverUrl}/api/v1/usuario`; // Rota para usuários comuns
+
+      const res = await axios.patch(url, data, {
         withCredentials: true,
       });
 
       toast.success("Usuário atualizado com sucesso!");
-
-      if (id) {
-        // Atualiza a lista de usuários se for um admin alterando outro usuário
-        await getUsuarios();
-      } else {
-        // Atualiza o estado do próprio usuário
-        setUser(response.data.user);
-
-        // Se o usuário logado for admin ou adminSupremo, recarrega a lista de usuários
-        if (response.data.user.role === "admin" || response.data.user.role === "adminSupremo") {
-          await getUsuarios();
-        }
-      }
-
       setLoading(false);
+
+      // Atualizar os dados do usuário logado, se não for admin
+      if (!isAdmin) {
+        await getUser();
+      } else {
+        // Atualizar a lista de usuários após a edição (para admins)
+        await getUsuarios();
+      }
     } catch (error) {
       console.error("Erro ao atualizar o usuário:", error);
       toast.error(error.response?.data?.message || "Erro ao atualizar o usuário");
@@ -74,61 +213,222 @@ export const UserContextProvider = ({ children }) => {
     }
   };
 
-  // Carregar os dados do usuário logado
-  const getUser = async () => {
+  // Verificar email
+  const verificacaoEmail = async (e) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${serverUrl}/api/v1/usuario`, {
-        withCredentials: true,
-      });
-      setUser(res.data || {}); // Garante que `user` nunca seja `null`
+      const res = await axios.post(
+        `${serverUrl}/api/v1/verificar-email`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      toast.success("Email de verificação enviado com sucesso!");
       setLoading(false);
-      return res.data;
     } catch (error) {
-      console.log("Não foi possível pegar o usuário: ", error);
+      console.log("Erro ao enviar o email de verificação! ", error);
+
+      getUser();
       setLoading(false);
-      toast.error(error.response?.data?.message || "Erro ao carregar o usuário");
+      toast.error(error.response.data.message);
     }
   };
 
-  // useEffect para carregar os dados do usuário logado e a lista de usuários
+  // Verificar email do usuário
+  const VerficarUsuario = async (verificationToken) => {
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/verificar-usuario/${verificationToken}`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      toast.success("Email verificado com sucesso!");
+
+      // Atualizar os dados do usuário após a verificação
+      const updateUsuario = await getUser();
+      setUser(updateUsuario);
+
+      setLoading(false);
+      router.push("/");
+    } catch (error) {
+      console.log("Erro ao verificar o email! ", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  // Esqueci minha senha
+  const redefinirSenhaEmail = async (email) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/redefinir-senha`,
+        { email },
+        {
+          withCredentials: true,
+        }
+      );
+
+      toast.success("Email de redefinição de senha enviado com sucesso!");
+      setLoading(false);
+    } catch (error) {
+      console.log("Erro ao enviar o email de redefinição de senha! ", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  // Redefinir senha
+  const redefinirSenha = async (password, token) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.patch(
+        `${serverUrl}/api/v1/senha-redefinir/${token}`,
+        { password },
+        {
+          withCredentials: true,
+        }
+      );
+
+      toast.success("Senha redefinida com sucesso!");
+      setLoading(false);
+      router.push("/login");
+    } catch (error) {
+      console.log("Erro ao redefinir a senha! ", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  // Trocar senha
+  const trocarSenha = async (currentPassword, newPassword) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.patch(
+        `${serverUrl}/api/v1/mudar-senha`,
+        { currentPassword, newPassword },
+        {
+          withCredentials: true,
+        }
+      );
+
+      toast.success("Senha alterada com sucesso!");
+      setLoading(false);
+    } catch (error) {
+      console.log("Erro ao alterar a senha! ", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  // Rotas do ADM
+  const getUsuarios = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${serverUrl}/api/v1/admin/usuarios`, {
+        withCredentials: true,
+      });
+      setAllUsers(res.data);
+      setLoading(false);
+    } catch (error) {
+      console.log("Erro ao pegar todos os usuários: ", error);
+      setLoading(false);
+    }
+  };
+
+  const updateUsuario = async (id, data) => {
+    setLoading(true);
+    try {
+      // Faz a requisição para a nova rota
+      const res = await axios.patch(
+        `${serverUrl}/api/v1/admin/usuario/${id}`,
+        data,
+        {
+          withCredentials: true,
+        }
+      );
+
+      toast.success("Usuário atualizado com sucesso!");
+      setLoading(false);
+
+      // Atualizar a lista de usuários após a edição
+      await getUsuarios();
+    } catch (error) {
+      console.error("Erro ao atualizar o usuário:", error);
+      toast.error(
+        error.response?.data?.message || "Erro ao atualizar o usuário"
+      );
+      setLoading(false);
+    }
+  };
+
+  // Apagar usuário
+  const deleteUsuario = async (id) => {
+    setLoading(true);
+    try {
+      const res = await axios.delete(
+        `${serverUrl}/api/v1/admin/usuario/${id}`,
+        {
+          withCredentials: true,
+        }
+      );
+      toast.success("Usuário apagado com sucesso!");
+      setLoading(false);
+
+      // Atualizar a lista de usuários após a exclusão
+      getUsuarios();
+    } catch (error) {
+      console.log("Erro ao apagar o usuário: ", error);
+      setLoading(false);
+      toast.error(error.response.data.message);
+    }
+  };
+
   useEffect(() => {
     const loginStatusGetUser = async () => {
-      try {
-        const res = await axios.get(`${serverUrl}/api/v1/status`, {
-          withCredentials: true,
-        });
+      const isloggedIn = await userLoginStatus();
 
-        if (res.data) {
-          const userData = await getUser();
-          setUser(userData);
-
-          // Se o usuário logado for admin ou adminSupremo, carrega a lista de usuários
-          if (userData.role === "admin" || userData.role === "adminSupremo") {
-            await getUsuarios();
-          }
-        } else {
-          router.push("/login");
-        }
-      } catch (error) {
-        console.log("Erro ao verificar status de login", error);
-        router.push("/login");
+      if (isloggedIn) {
+        await getUser();
       }
     };
-
     loginStatusGetUser();
   }, []);
+
+  useEffect(() => {
+    if (user.role === "admin" || user.role === "adminSupremo") {
+      getUsuarios();
+    }
+  }, [user.role]);
 
   return (
     <UserContext.Provider
       value={{
-        user,
-        allUsers,
+        registerUser,
+        userState,
+        handlerUserInput,
+        loginUser,
+        logoutUser,
+        userLoginStatus,
         getUser,
-        getUsuarios,
+        user,
         UserUpdate,
-        setUser,
-        setAllUsers,
+        verificacaoEmail,
+        VerficarUsuario,
+        redefinirSenhaEmail,
+        redefinirSenha,
+        trocarSenha,
+        allUsers,
+        deleteUsuario,
+        updateUsuario,
+        getUsuarios,
       }}
     >
       {children}
