@@ -4,9 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
-.Auth-form-container{ 
+/* Estilos personalizados */
+.Auth-form-container { 
     height: 100vh;
     background: url("/bg-login.png") no-repeat center center fixed;
+}
 
+body {
+  transition: background-color 0.3s, color 0.3s; /* Adiciona transição suave entre os temas */
 }
 

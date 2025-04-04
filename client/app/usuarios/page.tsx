@@ -1,13 +1,15 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import { useUserContext } from "@/context/UserContext";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import Navbar from "@/app/Components/Navbar/Navbar"
+import { Search, Trash2, Edit, X } from "lucide-react";
 
 export default function Users() {
   const { allUsers, getUsuarios, deleteUsuario, user, UserUpdate } = useUserContext();
-  const [isEditUserOpen, setIsEditUserOpen] = useState(false); // Controla o formulário de edição de outros usuários
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [updatedUser, setUpdatedUser] = useState({
     _id: "",
     name: "",
@@ -16,24 +18,23 @@ export default function Users() {
     role: "",
   });
 
-  const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
-  const [filteredUsers, setFilteredUsers] = useState([]); // Lista de usuários filtrados
-
-  const router = useRouter(); // Hook para navegação
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
-    // Carrega a lista de usuários ao carregar a página
-    getUsuarios();
+    getUsuarios(); // Carrega os usuários ao carregar a página
   }, []);
 
   useEffect(() => {
-    // Atualiza a lista de usuários filtrados quando o termo de busca muda
-    const usersWithoutLoggedIn = allUsers.filter(
-      (u: any) => u._id !== user?._id // Remove o usuário logado da lista
-    );
+    if (!user || (user.role !== "admin" && user.role !== "adminSupremo")) {
+      return;
+    }
+
+    const usersWithoutLoggedIn = allUsers.filter((u: any) => u._id !== user?._id);
 
     if (searchTerm.trim() === "") {
-      setFilteredUsers(usersWithoutLoggedIn); // Mostra todos os usuários (exceto o logado) se o termo de busca estiver vazio
+      setFilteredUsers(usersWithoutLoggedIn);
     } else {
       const filtered = usersWithoutLoggedIn.filter(
         (u: any) =>
@@ -44,11 +45,6 @@ export default function Users() {
     }
   }, [searchTerm, allUsers, user]);
 
-  if (user?.role !== "admin" && user?.role !== "adminSupremo") {
-    return <p>Você não tem permissão para acessar esta página.</p>;
-  }
-
-  // Função para abrir o formulário de edição de outro usuário
   const handleOpenEditUser = (userToEdit: any) => {
     setUpdatedUser({
       _id: userToEdit._id || "",
@@ -57,10 +53,9 @@ export default function Users() {
       bio: userToEdit.bio || "",
       role: userToEdit.role || "",
     });
-    setIsEditUserOpen(true); // Abre o formulário
+    setIsEditUserOpen(true);
   };
 
-  // Função para salvar as alterações de outro usuário
   const handleEditUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -69,204 +64,275 @@ export default function Users() {
       return;
     }
 
-    // Validação do e-mail
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Regex para validar e-mails
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(updatedUser.email)) {
       toast.error("Por favor, insira um e-mail válido!");
       return;
     }
 
     try {
-      // Verifica se o e-mail foi alterado
-      const originalUser = allUsers.find((u: any) => u._id === updatedUser._id); // Busca o usuário original na lista
+      const originalUser = allUsers.find((u: any) => u._id === updatedUser._id);
       if (originalUser && updatedUser.email !== originalUser.email) {
-        // Faz a requisição para verificar se o e-mail já está em uso
-        const response = await fetch(
-          `http://localhost:8000/api/v1/verificar-email-existente?email=${updatedUser.email}`,
-          {
-            method: "GET",
-          }
+        const emailExists = allUsers.some(
+          (u: any) => u.email === updatedUser.email && u._id !== updatedUser._id
         );
 
-        if (!response.ok) {
-          throw new Error("Erro ao verificar o e-mail.");
-        }
-
-        const { exists } = await response.json();
-
-        if (exists) {
-          toast.error("O e-mail já está em uso. Escolha outro.");
+        if (emailExists) {
+          toast.error("Este e-mail já está em uso. Escolha outro.");
           return;
         }
       }
 
-      // Atualiza os dados do usuário (nome e bio, ou todos os campos se o e-mail for válido)
       await UserUpdate(updatedUser._id, updatedUser);
-      setIsEditUserOpen(false); // Fecha o formulário após salvar
+      setIsEditUserOpen(false);
       toast.success("Usuário atualizado com sucesso!");
     } catch (error) {
-      console.error("Erro ao verificar o e-mail:", error);
+      console.error("Erro ao atualizar o usuário:", error);
       toast.error("Erro ao atualizar o usuário.");
     }
   };
 
-  // Função para limpar o campo de busca e mostrar todos os usuários
   const handleClearSearch = () => {
     setSearchTerm("");
   };
 
+  if (!user || (user.role !== "admin" && user.role !== "adminSupremo")) {
+    return (
+      <>
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p>Você não tem permissão para acessar esta página.</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
-    <main className="py-[2rem] mx-[10rem]">
-      {/* Navbar */}
-      <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <img
-            src={user?.photo || "https://p1.hiclipart.com/preview/227/359/624/education-icon-avatar-student-share-icon-user-user-profile-education-purple-png-clipart.jpg"}
-            alt={user?.name || "Usuário"}
-            className="w-[30px] h-[30px] rounded-full"
-          />
-          <h1 className="text-xl font-bold">
-            Bem-vindo, <strong className="text-blue-500">{user?.name}</strong>!
-          </h1>
-        </div>
-        <div className="flex gap-4">
-          <button
-            onClick={() => router.push("/")} // Redireciona para a página principal
-            className="px-4 py-2 bg-gray-500 text-white rounded-md"
-          >
-            Voltar
-          </button>
-          <button
-            onClick={() => router.push("/login")} // Exemplo de logout
-            className="px-4 py-2 bg-red-500 text-white rounded-md"
-          >
-            Sair
-          </button>
-        </div>
-      </header>
-
-      {/* Título e Campo de Busca */}
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">Gerenciamento de Usuários</h1>
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Buscar por nome ou e-mail"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border rounded-md"
-          />
-          <button
-            onClick={handleClearSearch} // Limpa a busca e mostra todos os usuários
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md"
-          >
-            Cancelar
-          </button>
-        </div>
-      </div>
-
-      {/* Lista de Usuários */}
-      <ul className="w-full max-w-[600px]">
-        {filteredUsers.map((user: any) => (
-          <li
-            key={user._id}
-            className="mb-4 px-2 py-3 border grid grid-cols-4 items-center gap-6 rounded-md border-gray-300"
-          >
-            <img
-              src={user.photo || "https://p1.hiclipart.com/preview/227/359/624/education-icon-avatar-student-share-icon-user-user-profile-education-purple-png-clipart.jpg"}
-              alt={user.name}
-              className="w-[40px] h-[40px] rounded-full"
-            />
-            <p>{user.name}</p>
-            <p className="max-h-[70px] overflow-y-auto break-words">{user.bio}</p>
-            <div className="flex gap-2">
-              {/* Botão de exclusão */}
-              <button
-                onClick={() => {
-                  if (window.confirm("Tem certeza que deseja deletar este usuário?")) {
-                    deleteUsuario(user._id); // Chama a função para deletar o usuário
-                  }
-                }}
-                className="text-red-600"
-              >
-                <i className="fas fa-trash"></i>
-              </button>
-              {/* Botão de edição */}
-              <button
-                onClick={() => handleOpenEditUser(user)} // Abre o formulário de edição de outro usuário
-                className="text-blue-600"
-              >
-                <i className="fas fa-edit"></i>
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      {/* Formulário de Edição de Outro Usuário */}
-      {isEditUserOpen && (
-        <div className="mt-4 max-w-[400px] w-full">
-          <h2 className="text-xl font-bold mb-4">Editar Usuário</h2>
-          <form onSubmit={handleEditUserSubmit} noValidate>
-            <div className="flex flex-col mb-4">
-              <label htmlFor="name" className="mb-1 text-gray-600">
-                Nome
-              </label>
+    <>
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <h1 className="text-2xl font-bold">Gerenciamento de Usuários</h1>
+          <div className="relative">
+            <div className="flex items-center border rounded-md overflow-hidden">
               <input
                 type="text"
-                id="name"
-                value={updatedUser.name}
-                onChange={(e) =>
-                  setUpdatedUser({ ...updatedUser, name: e.target.value })
-                }
-                className="px-4 py-2 border rounded-md"
+                placeholder="Buscar por nome ou e-mail"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-4 py-2 w-64 focus:outline-none"
               />
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="px-2 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              <div className="px-3 py-2 bg-gray-100">
+                <Search className="h-4 w-4 text-gray-500" />
+              </div>
             </div>
-            <div className="flex flex-col mb-4">
-              <label htmlFor="email" className="mb-1 text-gray-600">
-                E-mail
-              </label>
-              <input
-                type="text" // Alterado de "email" para "text" para evitar validação automática do navegador
-                id="email"
-                value={updatedUser.email}
-                onChange={(e) =>
-                  setUpdatedUser({ ...updatedUser, email: e.target.value })
-                } // Permite alterar o e-mail
-                className="px-4 py-2 border rounded-md"
-              />
-            </div>
-            <div className="flex flex-col mb-4">
-              <label htmlFor="bio" className="mb-1 text-gray-600">
-                Bio
-              </label>
-              <textarea
-                id="bio"
-                value={updatedUser.bio}
-                onChange={(e) =>
-                  setUpdatedUser({ ...updatedUser, bio: e.target.value })
-                }
-                className="px-4 py-2 border rounded-md"
-              ></textarea>
-            </div>
-            <div className="flex justify-between gap-4">
-              <button
-                type="button"
-                onClick={() => setIsEditUserOpen(false)} // Fecha o formulário de edição
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded-md"
-              >
-                Salvar Alterações
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
-      )}
-    </main>
+
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Usuário
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  E-mail
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Bio
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Função
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                    Nenhum usuário encontrado
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user: any) => (
+                  <tr key={user._id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 flex-shrink-0">
+                          <img
+                            className="h-10 w-10 rounded-full"
+                            src={
+                              user.photo ||
+                              "https://p1.hiclipart.com/preview/227/359/624/education-icon-avatar-student-share-icon-user-user-profile-education-purple-png-clipart.jpg"
+                            }
+                            alt={user.name}
+                          />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                      {user.bio}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          user.role === "admin" || user.role === "adminSupremo"
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleOpenEditUser(user)}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm("Tem certeza que deseja deletar este usuário?")) {
+                              deleteUsuario(user._id);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {isEditUserOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Editar Usuário</h2>
+                <button
+                  onClick={() => setIsEditUserOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleEditUserSubmit} noValidate>
+                <div className="mb-4">
+                  <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-1">
+                    Nome
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={updatedUser.name}
+                    onChange={(e) =>
+                      setUpdatedUser({ ...updatedUser, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-1">
+                    E-mail
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={updatedUser.email}
+                    onChange={(e) =>
+                      setUpdatedUser({ ...updatedUser, email: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label htmlFor="bio" className="block text-gray-700 text-sm font-bold mb-1">
+                    Bio
+                  </label>
+                  <textarea
+                    id="bio"
+                    value={updatedUser.bio}
+                    onChange={(e) =>
+                      setUpdatedUser({ ...updatedUser, bio: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                  ></textarea>
+                </div>
+
+                <div className="mb-4">
+                  <label htmlFor="role" className="block text-gray-700 text-sm font-bold mb-1">
+                    Função
+                  </label>
+                  <select
+                    id="role"
+                    value={updatedUser.role}
+                    onChange={(e) =>
+                      setUpdatedUser({ ...updatedUser, role: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="user">Usuário</option>
+                    <option value="admin">Admin</option>
+                    {user?.role === "adminSupremo" && (
+                      <option value="adminSupremo">Admin Supremo</option>
+                    )}
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditUserOpen(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Salvar Alterações
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
