@@ -13,6 +13,11 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const router = useRouter(); // Instância do useRouter
 
+  const handleNavigation = (path: string) => {
+    router.push(path); // Redireciona para a rota especificada
+    setIsDropdownOpen(false); // Fecha o dropdown após o clique
+  };
+
   const getInitials = (name: string) => {
     if (!name) return "U";
     return name
@@ -27,15 +32,10 @@ const Navbar = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const handleNavigation = (path: string) => {
-    router.push(path); // Redireciona para a rota especificada
-    setIsDropdownOpen(false); // Fecha o dropdown após o clique
-  };
-
   return (
     <header
       className={`py-4 transition-colors ${
-        isDarkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+        isDarkMode ? "bg-gray-800 text-gray-100 dark-mode" : "bg-white text-gray-900"
       }`}
     >
       <div className="mx-4 px-4 flex justify-between items-center">
@@ -54,11 +54,7 @@ const Navbar = () => {
               <li>
                 <button
                   onClick={() => handleNavigation("/")}
-                  className={`transition-colors ${
-                    isDarkMode
-                      ? "text-white hover:text-blue-400"
-                      : "text-gray-600 hover:text-blue-600"
-                  }`}
+                  className="navbar-link" // Reaproveita o estilo de link
                 >
                   Home
                 </button>
@@ -67,11 +63,7 @@ const Navbar = () => {
                 <li className="ml-6">
                   <button
                     onClick={() => handleNavigation("/usuarios")}
-                    className={`transition-colors ${
-                      isDarkMode
-                        ? "text-white hover:text-blue-400"
-                        : "text-gray-600 hover:text-blue-600"
-                    }`}
+                    className="navbar-link" // Reaproveita o estilo de link
                   >
                     Usuários
                   </button>

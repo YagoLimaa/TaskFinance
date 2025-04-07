@@ -121,7 +121,7 @@ export const UserContextProvider = ({ children }) => {
       await getUser();
 
       // Redirecionar para a página inicial
-      router.push("/");
+      router.push("/dashboard");
     } catch (error) {
       console.log("Erro ao fazer login", error);
       toast.error(error.response.data.message);

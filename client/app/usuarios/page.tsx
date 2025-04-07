@@ -2,13 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 import { useUserContext } from "@/context/UserContext";
+import { useThemeContext } from "@/context/ThemeContext";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import Navbar from "@/app/Components/Navbar/Navbar"
+import Navbar from "@/app/Components/Navbar/Navbar";
 import { Search, Trash2, Edit, X } from "lucide-react";
+import "@/app/styles.css";
 
 export default function Users() {
   const { allUsers, getUsuarios, deleteUsuario, user, UserUpdate } = useUserContext();
+  const { isDarkMode } = useThemeContext();
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [updatedUser, setUpdatedUser] = useState({
     _id: "",
@@ -112,6 +115,7 @@ export default function Users() {
   return (
     <>
       <Navbar />
+      <div className="spacer">&nbsp;</div> {/* Espaçador entre a Navbar e o conteúdo */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold">Gerenciamento de Usuários</h1>
@@ -232,107 +236,156 @@ export default function Users() {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {isEditUserOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Editar Usuário</h2>
-                <button
-                  onClick={() => setIsEditUserOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
+      {isEditUserOpen && (
+        <div className={`modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50`}>
+          <div
+            className={`rounded-lg p-6 w-full max-w-md ${
+              isDarkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+            }`}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className={`text-xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                Editar Usuário
+              </h2>
+              <button
+                onClick={() => setIsEditUserOpen(false)}
+                className={`text-gray-500 hover:text-gray-700 ${
+                  isDarkMode ? "dark:text-gray-300 dark:hover:text-gray-100" : ""
+                }`}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditUserSubmit} noValidate>
+              <div className="mb-4">
+                <label
+                  htmlFor="name"
+                  className={`block text-sm font-bold mb-1 ${
+                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
-                  <X className="h-5 w-5" />
-                </button>
+                  Nome
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={updatedUser.name}
+                  onChange={(e) =>
+                    setUpdatedUser({ ...updatedUser, name: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-gray-700 text-gray-100 border-gray-600"
+                      : "bg-white text-gray-900 border-gray-300"
+                  }`}
+                  required
+                />
               </div>
 
-              <form onSubmit={handleEditUserSubmit} noValidate>
-                <div className="mb-4">
-                  <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-1">
-                    Nome
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    value={updatedUser.name}
-                    onChange={(e) =>
-                      setUpdatedUser({ ...updatedUser, name: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="email"
+                  className={`block text-sm font-bold mb-1 ${
+                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  E-mail
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={updatedUser.email}
+                  onChange={(e) =>
+                    setUpdatedUser({ ...updatedUser, email: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-gray-700 text-gray-100 border-gray-600"
+                      : "bg-white text-gray-900 border-gray-300"
+                  }`}
+                  required
+                />
+              </div>
 
-                <div className="mb-4">
-                  <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-1">
-                    E-mail
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={updatedUser.email}
-                    onChange={(e) =>
-                      setUpdatedUser({ ...updatedUser, email: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="bio"
+                  className={`block text-sm font-bold mb-1 ${
+                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Bio
+                </label>
+                <textarea
+                  id="bio"
+                  value={updatedUser.bio}
+                  onChange={(e) =>
+                    setUpdatedUser({ ...updatedUser, bio: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-gray-700 text-gray-100 border-gray-600"
+                      : "bg-white text-gray-900 border-gray-300"
+                  }`}
+                  rows={4}
+                ></textarea>
+              </div>
 
-                <div className="mb-4">
-                  <label htmlFor="bio" className="block text-gray-700 text-sm font-bold mb-1">
-                    Bio
-                  </label>
-                  <textarea
-                    id="bio"
-                    value={updatedUser.bio}
-                    onChange={(e) =>
-                      setUpdatedUser({ ...updatedUser, bio: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                  ></textarea>
-                </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="role"
+                  className={`block text-sm font-bold mb-1 ${
+                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Função
+                </label>
+                <select
+                  id="role"
+                  value={updatedUser.role}
+                  onChange={(e) =>
+                    setUpdatedUser({ ...updatedUser, role: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-gray-700 text-gray-100 border-gray-600"
+                      : "bg-white text-gray-900 border-gray-300"
+                  }`}
+                >
+                  <option value="user">Usuário</option>
+                  <option value="admin">Admin</option>
+                  {user?.role === "adminSupremo" && (
+                    <option value="adminSupremo">Admin Supremo</option>
+                  )}
+                </select>
+              </div>
 
-                <div className="mb-4">
-                  <label htmlFor="role" className="block text-gray-700 text-sm font-bold mb-1">
-                    Função
-                  </label>
-                  <select
-                    id="role"
-                    value={updatedUser.role}
-                    onChange={(e) =>
-                      setUpdatedUser({ ...updatedUser, role: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="user">Usuário</option>
-                    <option value="admin">Admin</option>
-                    {user?.role === "adminSupremo" && (
-                      <option value="adminSupremo">Admin Supremo</option>
-                    )}
-                  </select>
-                </div>
-
-                <div className="flex justify-end gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditUserOpen(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Salvar Alterações
-                  </button>
-                </div>
-              </form>
-            </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsEditUserOpen(false)}
+                  className={`px-4 py-2 border rounded-md ${
+                    isDarkMode
+                      ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Salvar Alterações
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

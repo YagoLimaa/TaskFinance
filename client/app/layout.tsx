@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
-import "./themes.css"; // Importa os estilos dos temas
+import "./themes.css";
 
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { UserContextProvider } from "@/context/UserContext";
 
-export const metadata: Metadata = {
-  title: "Configurações - TaskFinance",
-  description: "Gerencie suas configurações de aparência e preferências.",
-};
 
 export default function RootLayout({
   children,
