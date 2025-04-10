@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 interface ThemeContextProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  setIsDarkMode: (value: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
@@ -17,8 +18,10 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     setIsDarkMode((prev) => {
       const newMode = !prev;
       if (newMode) {
-        document.body.classList.add("dark");
-        document.body.classList.remove("light");
+        if (!document.body.classList.contains("login-page")) {
+          document.body.classList.add("dark");
+          document.body.classList.remove("light");
+        }
       } else {
         document.body.classList.add("light");
         document.body.classList.remove("dark");
@@ -33,8 +36,10 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       setIsDarkMode(true);
-      document.body.classList.add("dark");
-      document.body.classList.remove("light");
+      if (!document.body.classList.contains("login-page")) {
+        document.body.classList.add("dark");
+        document.body.classList.remove("light");
+      }
     } else {
       setIsDarkMode(false);
       document.body.classList.add("light");
@@ -43,7 +48,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
+    <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode, setIsDarkMode }}>
       {children}
     </ThemeContext.Provider>
   );

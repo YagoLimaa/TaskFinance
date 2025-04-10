@@ -4,9 +4,7 @@ import {protect} from "../middleware/authMiddleware.js";
 
 
 const router = express.Router();
-
 // [protect] se refere ao middleware que vai proteger a rota, ou seja, só vai deixar acessar a rota se o usuário estiver logado
-
 
 // rota para poder criar tarefas novas
 router.post("/tarefa/criar", protect, CriarTarefa);

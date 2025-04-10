@@ -827,3 +827,61 @@
 .dark-mode .modal button:hover {
   background-color: #1e40af; /* Botão azul mais escuro no hover */
 }
+
+/* Tema escuro para páginas específicas */
+body.dark.users-page {
+  background-color: #1a202c; /* Fundo escuro */
+  color: #f9fafb; /* Texto claro */
+}
+
+body.dark.users-page .container {
+  background-color: #2d3748; /* Fundo do contêiner */
+  color: #e2e8f0; /* Texto claro */
+}
+
+/* Estilos específicos para a página de login */
+body.login-page {
+  background-color: #f9f9f9; /* Fundo claro */
+  color: #222; /* Texto mais escuro */
+}
+
+body.login-page .Auth-form-container {
+  background-color: #ffffff; /* Fundo do formulário */
+  color: #222; /* Texto mais escuro */
+}
+
+body.login-page input,
+body.login-page button,
+body.login-page a {
+  color: #222; /* Garante que os textos sejam mais escuros */
+}
+
+body.login-page input::placeholder {
+  color: #555; /* Placeholder mais escuro */
+}
+
+body.login-page input {
+  background-color: #fff; /* Fundo dos campos */
+  border: 1px solid #ccc; /* Borda dos campos */
+}
+
+body.login-page input:focus {
+  border-color: #2563eb; /* Cor de foco */
+}
+
+body.login-page button {
+  background-color: #2ecc71; /* Botão verde */
+  color: #fff; /* Texto branco */
+}
+
+body.login-page button:hover {
+  background-color: #1abc9c; /* Botão verde mais escuro no hover */
+}
+
+.login-page,
+.login-page * {
+  all: unset; /* Remove todos os estilos herdados */
+  background-color: #f9f9f9; /* Fundo claro */
+  color: #333; /* Texto escuro */
+  font-family: 'Roboto', sans-serif; /* Fonte padrão */
+}
